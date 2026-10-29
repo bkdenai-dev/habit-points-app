@@ -39,7 +39,7 @@
         </div>
 
         <button @click="showChangelogModal = true" class="flex-shrink-0 text-[11px] bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold px-2.5 py-1 rounded-full flex items-center gap-1 transition whitespace-nowrap shadow-xs active:scale-95">
-          <span>v1.2.1</span>
+          <span>v1.2.2</span>
           <span>📜日志</span>
         </button>
       </div>
@@ -55,20 +55,6 @@
         <span class="bg-amber-50 text-amber-700 font-medium px-2 py-0.5 rounded-md flex-shrink-0">
           心愿限兑 1 次/天
         </span>
-      </div>
-
-      <!-- 数据备份与重置工具组 -->
-      <div class="mt-3 flex items-center gap-2">
-        <button @click="exportJSON" title="导出备份数据" class="flex-1 sm:flex-none justify-center px-2.5 py-1.5 bg-white border border-slate-200 hover:border-indigo-400 text-slate-700 text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1 active:bg-slate-50 transition">
-          📥 备份导出
-        </button>
-        <label class="flex-1 sm:flex-none justify-center px-2.5 py-1.5 bg-white border border-slate-200 hover:border-indigo-400 text-slate-700 text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1 cursor-pointer active:bg-slate-50 transition">
-          📤 恢复数据
-          <input type="file" accept=".json" @change="importJSON" class="hidden">
-        </label>
-        <button @click="resetToDefaultPrompt" title="重置到白板初始状态" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-lg active:bg-rose-200 transition">
-          🔄 重置
-        </button>
       </div>
     </header>
 
@@ -88,61 +74,32 @@
         >
           <!-- 卡片头部：卡通头像 + 姓名 + 角色 -->
           <div class="flex items-center gap-2">
-            <!-- 头像容器 -->
-            <div class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-2xl flex items-center justify-center p-1 bg-gradient-to-tr" 
-                 :class="kid.id === 'brayden' ? 'from-sky-100 to-indigo-100' : 'from-amber-100 to-orange-100'">
+            <!-- 头像容器 (KooBits 同款猫头鹰 & 卡通小老虎) -->
+            <div class="w-11 h-11 sm:w-12 sm:h-12 flex-shrink-0 rounded-2xl flex items-center justify-center p-0.5 bg-gradient-to-tr shadow-xs overflow-hidden" 
+                 :class="kid.id === 'brayden' ? 'from-amber-400 to-orange-500' : 'from-amber-100 to-orange-100'">
               
-              <!-- Brayden 专属精绘纯头部大眼可爱卡通猫头鹰 -->
-              <div v-if="kid.id === 'brayden'" class="w-full h-full flex items-center justify-center">
-                <svg viewBox="0 0 100 100" class="w-8 h-8 sm:w-10 sm:h-10 drop-shadow-xs">
-                  <!-- 羽毛耳朵/耳簇 -->
-                  <path d="M20 26 L13 10 L33 19 Z" fill="#7C3F18"/>
-                  <path d="M80 26 L87 10 L67 19 Z" fill="#7C3F18"/>
-                  <path d="M22 24 L17 14 L30 20 Z" fill="#D97706"/>
-                  <path d="M78 24 L83 14 L70 20 Z" fill="#D97706"/>
-                  <!-- 胖乎乎圆圆猫头鹰大脑袋 -->
-                  <ellipse cx="50" cy="54" rx="40" ry="36" fill="#8B4513"/>
-                  <ellipse cx="50" cy="54" rx="37" ry="33" fill="#B45309"/>
-                  <!-- 眼眶大白圈 (萌系大白眼底) -->
-                  <circle cx="36" cy="50" r="18" fill="#FFFDF5"/>
-                  <circle cx="64" cy="50" r="18" fill="#FFFDF5"/>
-                  <!-- 灵动金色大虹膜 -->
-                  <circle cx="36" cy="50" r="12.5" fill="#F59E0B"/>
-                  <circle cx="64" cy="50" r="12.5" fill="#F59E0B"/>
-                  <!-- 大瞳孔 -->
-                  <circle cx="36" cy="50" r="8.5" fill="#1C1917"/>
-                  <circle cx="64" cy="50" r="8.5" fill="#1C1917"/>
-                  <!-- 闪闪发光高光点 (双光斑 Kawaii 效果) -->
-                  <circle cx="33" cy="46" r="3.5" fill="#FFFFFF"/>
-                  <circle cx="61" cy="46" r="3.5" fill="#FFFFFF"/>
-                  <circle cx="38" cy="52" r="1.5" fill="#FFFFFF"/>
-                  <circle cx="66" cy="52" r="1.5" fill="#FFFFFF"/>
-                  <!-- 粉红害羞腮红 -->
-                  <ellipse cx="22" cy="62" rx="5" ry="3" fill="#F472B6" opacity="0.85"/>
-                  <ellipse cx="78" cy="62" rx="5" ry="3" fill="#F472B6" opacity="0.85"/>
-                  <!-- 可爱三角小金喙 -->
-                  <polygon points="50,52 44,62 56,62" fill="#EA580C"/>
-                  <polygon points="50,53 45,61 55,61" fill="#F97316"/>
-                </svg>
-              </div>
+              <!-- Brayden KooBits 官方同款猫头鹰 -->
+              <img v-if="kid.id === 'brayden'" :src="KOOBITS_OWL_IMG" class="w-full h-full rounded-xl object-cover" alt="Brayden KooBits Owl">
 
               <!-- Kayden 可爱小老虎头像 -->
               <span v-else class="text-2xl sm:text-3xl leading-none">🐯</span>
             </div>
 
-            <!-- 姓名与打卡状态 -->
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-1">
-                <span class="font-black text-sm sm:text-base text-slate-800 truncate">{{ kid.name }}</span>
-                <span class="text-[10px] font-bold px-1 py-0.2 rounded flex-shrink-0" :class="kid.id === 'brayden' ? 'bg-sky-100 text-sky-800' : 'bg-amber-100 text-amber-800'">
+            <!-- 姓名与打卡状态（分行自适应，字号饱满，独占整行绝不截断） -->
+            <div class="min-w-0 flex-1 pl-0.5">
+              <div class="font-black text-sm sm:text-base text-slate-800 tracking-tight leading-snug">
+                {{ kid.name }}
+              </div>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <span class="text-[10px] font-bold px-1.5 py-0.2 rounded" :class="kid.id === 'brayden' ? 'bg-sky-100 text-sky-800' : 'bg-amber-100 text-amber-800'">
                   {{ kid.nickName }}
                 </span>
-              </div>
-              <div class="text-[10px] text-slate-400 truncate mt-0.5">
-                <span v-if="state.activeChildId === kid.id" class="text-indigo-600 font-bold flex items-center gap-0.5">
-                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span> 当前打卡
+                <span v-if="state.activeChildId === kid.id" class="text-[10px] text-indigo-600 font-extrabold flex items-center gap-0.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>打卡中
                 </span>
-                <span v-else>{{ kid.role }}</span>
+                <span v-else class="text-[10px] text-slate-400">
+                  {{ kid.role }}
+                </span>
               </div>
             </div>
           </div>
@@ -163,8 +120,9 @@
       <!-- 心愿进度条 (单行左右排版，移动端不挤断) -->
       <div class="mt-3 bg-white rounded-2xl p-3 sm:p-4 border border-indigo-100 shadow-xs">
         <div class="flex items-center justify-between text-xs font-bold text-slate-700 mb-2.5">
-          <span class="flex items-center gap-1 truncate">
-            <span>🎯</span>
+          <span class="flex items-center gap-1.5 truncate">
+            <img v-if="currentChild.id === 'brayden'" :src="KOOBITS_OWL_IMG" class="w-4 h-4 rounded-xs object-cover inline-block flex-shrink-0 shadow-2xs" alt="Owl">
+            <span v-else class="text-xs">🐯</span>
             <span class="truncate">{{ currentChild.name }} ({{ currentChild.nickName }}) 的心愿达成率</span>
           </span>
           <span class="text-[10px] text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded font-semibold flex-shrink-0">
@@ -209,30 +167,7 @@
       <div class="flex items-center justify-between mb-3">
         <div class="min-w-0">
           <h2 class="text-base font-black text-slate-800 flex items-center gap-1.5 truncate">
-            <span class="w-5 h-5 flex items-center justify-center flex-shrink-0">
-              <svg viewBox="0 0 100 100" class="w-5 h-5 drop-shadow-xs">
-                <path d="M20 26 L13 10 L33 19 Z" fill="#7C3F18"/>
-                <path d="M80 26 L87 10 L67 19 Z" fill="#7C3F18"/>
-                <path d="M22 24 L17 14 L30 20 Z" fill="#D97706"/>
-                <path d="M78 24 L83 14 L70 20 Z" fill="#D97706"/>
-                <ellipse cx="50" cy="54" rx="40" ry="36" fill="#8B4513"/>
-                <ellipse cx="50" cy="54" rx="37" ry="33" fill="#B45309"/>
-                <circle cx="36" cy="50" r="18" fill="#FFFDF5"/>
-                <circle cx="64" cy="50" r="18" fill="#FFFDF5"/>
-                <circle cx="36" cy="50" r="12.5" fill="#F59E0B"/>
-                <circle cx="64" cy="50" r="12.5" fill="#F59E0B"/>
-                <circle cx="36" cy="50" r="8.5" fill="#1C1917"/>
-                <circle cx="64" cy="50" r="8.5" fill="#1C1917"/>
-                <circle cx="33" cy="46" r="3.5" fill="#FFFFFF"/>
-                <circle cx="61" cy="46" r="3.5" fill="#FFFFFF"/>
-                <circle cx="38" cy="52" r="1.5" fill="#FFFFFF"/>
-                <circle cx="66" cy="52" r="1.5" fill="#FFFFFF"/>
-                <ellipse cx="22" cy="62" rx="5" ry="3" fill="#F472B6" opacity="0.85"/>
-                <ellipse cx="78" cy="62" rx="5" ry="3" fill="#F472B6" opacity="0.85"/>
-                <polygon points="50,52 44,62 56,62" fill="#EA580C"/>
-                <polygon points="50,53 45,61 55,61" fill="#F97316"/>
-              </svg>
-            </span>
+            <img :src="KOOBITS_OWL_IMG" class="w-5 h-5 rounded-md object-cover inline-block flex-shrink-0 shadow-2xs" alt="KooBits Owl">
             <span class="truncate">Brayden (健健) 的成长任务</span>
           </h2>
           <p class="text-[10px] text-slate-400 truncate">学业攻关 • KooBits • 琴艺 • 榜样兄长</p>
@@ -633,6 +568,36 @@
       </div>
     </section>
 
+    
+    <!-- 底部数据管理与运维区 (备份导出 / 恢复数据 / 初始重置) -->
+    <footer class="mt-8 mb-6 pt-5 border-t border-slate-200/80">
+      <div class="bg-white/90 backdrop-blur-xs rounded-2xl p-4 border border-slate-200 shadow-xs">
+        <div class="flex items-center justify-between mb-2.5 text-xs text-slate-600 font-bold">
+          <span class="flex items-center gap-1.5">
+            <span>⚙️</span>
+            <span>家庭数据管理与备份</span>
+          </span>
+          <span class="text-[10px] text-slate-400 font-normal">LocalStorage 本地存储</span>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <button @click="exportJSON" title="导出备份全量数据" class="flex-1 justify-center py-2 px-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200/60 shadow-2xs flex items-center gap-1 active:scale-98 transition">
+            📥 备份导出
+          </button>
+          <label class="flex-1 justify-center py-2 px-2.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-xl border border-sky-200/60 shadow-2xs flex items-center gap-1 cursor-pointer active:scale-98 transition text-center">
+            📤 恢复数据
+            <input type="file" accept=".json" @change="importJSON" class="hidden">
+          </label>
+          <button @click="resetToDefaultPrompt" title="重置到白板初始状态" class="py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded-xl border border-rose-200/60 active:scale-98 transition flex items-center gap-1">
+            🔄 重置
+          </button>
+        </div>
+        <p class="text-[10px] text-slate-400 text-center mt-2.5">
+          💡 数据安全保存在本机浏览器中 • 多设备同步可通过底部备份导出与恢复数据进行迁移
+        </p>
+      </div>
+    </footer>
+
     <!-- 弹窗 1: 音赛成就奖励弹窗 -->
     <div v-if="showCompetitionModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
       <div class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-5 shadow-2xl">
@@ -706,10 +671,24 @@
         </div>
 
         <div class="mt-3 overflow-y-auto space-y-3.5 pr-1 text-xs text-slate-600">
-          <!-- v1.2.1 -->
+                    <!-- v1.2.2 -->
           <div class="p-3 bg-indigo-50/70 border border-indigo-100 rounded-2xl">
             <div class="flex items-center justify-between mb-1">
-              <span class="font-extrabold text-indigo-700 text-xs sm:text-sm">v1.2.1 (当前最新版)</span>
+              <span class="font-extrabold text-indigo-700 text-xs sm:text-sm">v1.2.2 (当前最新版)</span>
+              <span class="text-[10px] text-slate-400">2026-10-29</span>
+            </div>
+            <ul class="list-disc pl-4 space-y-1 text-slate-600 text-[11px]">
+              <li><strong>KooBits 官方同款猫头鹰</strong>：Brayden 头像升级为 KooBits 官方同款大眼猫头鹰，完美贴合孩子熟悉的学习形象，与小老虎保持生动卡通一致。</li>
+              <li><strong>数据运维按钮下移</strong>：“备份导出、恢复数据、重置”统一收拢至页面底部数据管理区，释放顶部核心打卡黄金视野。</li>
+              <li><strong>儿童选择卡排版升级</strong>：姓名独占整行饱满排布，昵称与打卡状态分行自适应，彻底消除手机端 <code>Brayden</code> 字母截断与显示不全的问题。</li>
+              <li><strong>多端同步机制明确</strong>：当前为 Local-First 极速离线架构，提供随时升级 Cloudflare KV 全设备实时动态同步的技术通道。</li>
+            </ul>
+          </div>
+
+          <!-- v1.2.1 -->
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-bold text-slate-700">v1.2.1</span>
               <span class="text-[10px] text-slate-400">2026-10-29</span>
             </div>
             <ul class="list-disc pl-4 space-y-1 text-slate-600 text-[11px]">
@@ -821,7 +800,11 @@
       }
     };
 
-    const STORAGE_KEY = "HABIT_POINTS_DATA_v1_2_1";
+    
+    // KooBits 官方同款猫头鹰吉祥物 (Base64)
+    const KOOBITS_OWL_IMG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAlYElEQVR42u2dd3Bk13Xmf/e+3BndyJgETOAM05AzIkWRouRVtqJlxZJXDvJa8trrsnflKmeXSt6yvLVe59q1qyzL67DltA5yKSxFSqLEJDGJIjkznIjhDDIajc4v3/2jGw30oAFiEjlyza1CkZgBXr97v3vO+c53zr0j6j9zk+L6uGaGLm9sXl+Fa2jI60twHZDr4zog1wG5Pq4Dch2Q6+M6INcBuT6uA3IdkOvjOiDXx3VArgNyfVxTgCjgyLTD1LJBGIvrK/1KAyKAYt3mn58e5ZGTGZr+v01jVEAUt76ueZc1kG7iR5LHJwt8/plBFms68b+hclgUw3zF4Gsv5K6YF5BX60XDGEayAVnHx48kZ5eS/N+nRnh+OoEffu+7MC8UPDeV5J+eHqHmmujyyuw0/Wq8rB9KHjjWx/Z8k+GMy2LVxhGKetPkgaNDTC5WuXdviYwTIb9XsIkFxBBrinJD45sn+zi1kCaKBf1pF+0Kbe2rAogmFW6g8bVjg9hGhAIGrZisrni+pnNsNstcxebwzhL7h5s4ZnyN+yaJWk7g2h4nSgbfnsxTqpuEsSRphWzvc3EDgW1cvpVov/rOvk9dcaYgQCnFqcUUNc9AIYiBu/Mh/ZZi1pNUPJ0XlxJMly0sIyBpKnRNXXMRWwU6aiHDTNnmgXMpnpnKUW2axEq056qougZZxyOXiK9NCxECdg+6nJyvcXw+QxQLaqHkaE3jnnzIsBXz5LLOmYbG2WKS2YrNaLbJgZEKuwo+jhGha68gDqplFVRtqCSpuwYPzpicc7UOEKuxRGOpbpJLXMMxBMA2Yu7ZU6JYN6k2bARwrKqT1RUHsyFvGfSZdiVHqxqTTZ2ziynOlxJknYDBtMdA2iNt+5hay3JsXeGYCkOLMbUYXWsBf9EUNYIgFkSxQK1Z3EgJggA8VycdmqQiE+kb1APJg0WDWU8joYEXQaDWbj5Ff8ojYUVXZjM3/9eEupq08PSCzZMnBtjvwJNlg0Yo2JsKeXVfSFpXhAqWfMG5psZkQzLva3gxKBSaVEihEKLlBnVNkTR9MnZIXzJkNNtgKBOStKKeQTWIwA00Kq5ksWqw1LCpuhoNX+IFGlEsMDWFLWDQhBFTMWwqHCFRwIIneHjJYMbVGLQi9iUjvrFk0oxWgUyaIe+4ZYbdg961bSGt4A75ZEgsI2wpefeQx8m6xnlX8tUFg0O5kO1OzIitGLJCbskIymHAvCdZ9CSLvqAUSPxI4Cuoe4LlhsFU23ebepaMHbI932TvYI2RrE8YS5ZqGjNlm7mqSbFmUfMMwkiAEuhC4EhFnxEzYCn6zZhBKyalK0wpEAiCGI7XNJ6t6thScW/BZ2ci5mhF6+QbQiiSZshdE0W25/0r5+6vpoUEkeDhk1mePJsnp8PrCj6jduvjGiH4sWDAijF67O5IgR+3fqYSCiqBoBQIFnzJnCeph4Kg7XIE4JghY7k6dd9guWHihRo6kNYVw1ZMvxnTZyoyuiKlKwyhMCU9aXcjgpIvSGhga613OV7TeLRkUG3nUH0JjzfsX2C838O4gmREv5qSwkzZ4LnpLH4kWYjgi3MW44mI8UTEsB2TN2O0DeKAJsDRwNEUWUOB0wq2voJ6KHixKVvW1tRwY0HD1zkxn0UAKV1xIBmxOxkyaiscTWHIFnBbGZaEPhPKgeB0Q3CyrjHtanhrsnHbiBjOBlcUjKsKiBtIHp/MUff0DkCNSHCkqnO8rpHUBTv6bG4/MM5YzkYVp6G2jPKbEHhtqrOevVkCLFPRZ0bsT0ecbWg8XtKZdjWkgD3JkFflQoY2sLz1HF2CYSNMB7L9yP5tlGOTb33nGKcXi9TckLDHmpcaFjPLBpnh6NoHJFZwYs7mxaXkOpqoAGEmyO3Zyw1veyfDt9yKaRng1YmL08TTJ1AzZ1BL06jiFKpZA78JcbxOvLQl7EtFjNoxX1s0yBsxd/SFWJsBoekIKwHJLKIwhiyMIkb2IMf2IrL9YKcoKLj7DQtY932JIw9/g2ppiTiK1qkRx+fSTAxcWZd1VWJI1dX4p6eHmF5OsPbhQkpS2RyH3vw27nz7u0nmcogu7hpDHKIiF5pVVKNMfPYI8eTzqNlzqOIMqlntaT1eDLqgtwuUGiKZRQzuQIzsQk7cjByZQDgpsJIIzQBhgNBY69gCz2Pq5HG+9td/wdTJFwi8biaVS/i8//A0A6nw2gUkiuFbZzI8cqqfIJJrPIMkNzTMmz76Mfa96k4My1q1mdhHhUsofxblnUf5CxC3u/KljZA5iDLE0/PETz5KfO4kuPWtTTCdR+y9Df2ONyD6EihZhmAeFZVBRSB0hJ5FmCMIawyMIYSWANF2tUpRLRa5/68+x9HHHsZvrp4W0LWYu8aL3LOnfMU0uSvusiquxpHpTBcYQkpyg8O84xP/ifFbDqLp7Y9VPsqfJ64+Sdx4AeJGa5F6EASQMOCgvf0OxPHdxI9+HbW8tAkSEjEygf6WDyNGk6jG08S1Eqiw88TO870pqB8BaSH0PDLzaqSzD7QkQkgy/f289WMfRzdNnn3wq/iuC0AYSc4sJjm0s0ryCulxV1TLimLBt85kOL2Y6oodqVwfb/vxT7Dn0KvaYCiIGsTVp4iKX0S5Z0F56xaqh7AEcQnRFyF3HECdn4b24lwIhtx1I8YHfwLso6jmdyGqtVziptQwgqiGap5CeecQ5oq1SEzLZtve/SxOT7E0O4Nqx7QgkgymmvSnw2uvHlJxJSfm0oRrrMO0be58+7vYe/iODhgqqhIt3UdUegCi6ksA0ctefMguIN9yGySt9XiMTqC/7yPE/v0of7qn1W3+EQHKnSSa/xvi5qnWRgCSuRxv/Pc/SmF0Wyf2eaHkyEyWILrGClRxDN85l6bsGmtoqmTbvv0cfvP3r8aMqEFcup+4/kxnopdaIxYFhbxrnLW6iUhm0N/1AWL36+04dOkhUoVlosV/IXYnO6Dmh0e4930fxEok2jFGMFOxKDe1awuQuq9xaj7VZR1WIsEdb38XyVyus/Pi6pPEtedectfGscLzI5puiOdHxL1qv0Ig9w0idhU632v3vBWl9wY7imJcL6TphvhB3Ius9fDDVeLiF1HhEqCQmsae21/FrpsPdqyk4ek8N5W6IuVp/UrJ1UdnHMqu2fXn2244wM6bbmm/uEJ500SVxza1jCCMKVc8pufqPPrULItLTYb6E9x5+xBjQymyGQt9LbeVEvnqcaKzS4jsIOLGNCpY7LIMz49YWnY5ObnMU88t0GiG7NqW4c7bhhgoOCQTBtomNEkFS8Tlh9Hy3w/SwkmnOfh9b+TMd7+D12wQxpLJYoI7gwqJywzu+pUp2QqOzWbww1Xr0A2DA6++GyeVbm95n7j6ZDu49o4Mnhfy3LEiv/bbjzE1WycIW5PTNI10OsH2kRS/+NMHuXlvH6a56iJEzkGMF5Djh1H+GRCrYNTqAf/6wBn++C+fo7jUJGpvY8Mw6MsluWEiw6/97CGGBxIY+kYOIyZuHEMmb0E4Ewgh2L7/APnRMWZOnQBguWExvWyw5zJV3yvishZrOqVGt3U46Qxj+/YhpWzvskXi5skNfbrvR3z1kfP81K8+yOT5agcMXdfZNT7Op//rZ/joj3+S3/yfJ/n6Y1OdhV1xVWL/EGLC6ALD9SJ+97NP81t/9ATzi43O71iWxd333MNn/vvv8arXfoD/8htPcG6mThRt4nOiBnHjWJs2g5NKs/fQ4a7g/txU9kJB4eW3EKXg2ak0XtiNbf/YNjKF/s7+V+6LrTxjg3hx+myZ3/yDJ6jWuqXsTCbDZ//8c2zbto04jjl8x2F+6APvZdf2DPvGc6s7a3seRKnrd7/41Un+4Qun8IPuVbrp5pv4nd//PbLZLK97/esYHBrk13/7D/jdX7+LgYKzIbtTzdOoqIHQs+imyfD4bnTDJPA9YiVYrJk0AknKil85C/FCwXQ5QRR3P2pg2w4My26veIDyZzYM5I1myGf/9gjFZfeCmC3IFwqMjIx0sv1CoZ90tsDn/u5It61dUD5sNEN+/8++QxCs/8x7Xnsvpml2PuP2229naj7g6efnCTfpeFNxHYLF1c1S6MdMrAJY8wzmKsYr67IqTZ2at97QMgMD6IaxyuvD5Q2fUSy5PPXsfA/rUywVi8xMzxAEAb7vMzs7y9TUDA88dB7X3TgZ++7RRcoVvyeTevSRR6jX6wRBgOu6PPH4E1Rrdf7lvjM0mpskeLHfNY9EJothruZBfiQ5PpfcGnu7Wi7r1KLVFcw7lNdJIDVtNQOO3Q2fUav71Bq9F6JSqfCTH/84P/GJj9NoNPizP/0sjUYD29KYma8zsSPb8/fOz9SIN1iZp59+ml/75V/hve/7QY4ePcpf/e+/oF6rM3lOw/MiSG0YSLrmoZvm6hzbSsVcxcGPBJauXn5AlIKzi6mebZTrGxDUprn3RtsqDEOOHT3KJ3/uP/eMPRuXANSGHxmFIV+57z6+ct996+ZzMbu7F1GueTp1T8PSw5ffZfmRoO7rXd0bndjSdIlXKIeQIK0Nn5NwdBzn4vaGpkkGC4kN/36oP4G4SAl2eDCBZW6WcWtd8wiDYHWOa9qCzi4Zr0wMCSKBUq2Gg3U1kaUiUdBOAIWB0LIbPiefs7lhd9+W23o0KbjztiEyaXPDnzl4Yz8JW9/yM6UUvP0Nu0hstjGEDlq6822zViX0u1lhGAlOLWQuWbC5LEASZsyH7phiJLs+PixOnV8t6EgTYQ5v+HGZlMl/+PBNOPbWrMS2dX7sgwc2/ZlcxuKj77sBYwsdd0LA2HCSuw4NY2xS9xVaAmEMrMa3YrGrPtK6Ximm7uqX3FAuL7dlNG2rniXMxXNnqS2XOt5WWNtAczbcnTffUODjH7kJw5AbNiMIAY6t8+MfvpE7Dg6tD0Sq24X96Adu5M7bBjfJwFu0N5U0+fQn72JkILk5cNZOhJbqxKGFF8/ie25X09yOQoP33j6NJtQrl6n3clm1cpmZUyc7UVJYwwhr56Zx5Ifff4Bf+I+HSSYNNE0gpUCI1n81TZBJmfz8J27nEz9083pisFAl+tK3WavwJRyd3/n1e/mBt05gWxqaFEjR/cydYyn+8Ddex6sODqJpm+xqaSMSN4BsuUm3VuPUM091sQClBE1fxzHVJbfCXhEtS0qFuIBHhb7H8Se+xQ133oWdTIJ0kOlDRO7pDSmwY+t85Af28aZ7t/Plr7/Id55foFR2yedsDt08wFtfv7N3Jh0r4scnUZNF1FwFMZztUKB0yuTTP38XH37PPh546BxHT5RoeiGjw0nuPjTCv7t72+ZxY2X3OxNIZ7zz/czpk8xNnumZKPuhxNDiV7iEKxRcwLZOf/dppk68wO7bDrWAc8ZR6duJy49tSIOFEAz1J/iR9+/nR96/f0vcW51aQE0WW9h84wTaD94ORvcWvXFvnhv35i9tanoGLXMPSKfNIJs899CDNGvVHkRHa5ev41fOZd2xs8S7b50in+xWOhuVCk/e9yXcelvhFSYy81qEs4crdlygWCd68PjqHy3WiL55git2dk6YyNybWjGwPV58/lmOfevRDZinxI/kK6v27ur3ODDiMt5fR7vgaNeJJ7/Ncw99o1ODFnoGrfBOhD1xBcCoEX3hWfC6kzB1bJbokVOXfxJTmGj5tyJTt7RyKaCyuMDD//wP66zD0GIG0k2EUAThNdDkIASkrYCTC0m8UOvKiufPTjK6Zy+5waE2fbQRiT0Quahg/uLLrLFCnV4k+n9HoLFBo/N8FVWsIUdzYF6CZzYKaP3vQSZv7rQE+a7L1//mrzny6EOoNcFck4qbxpb5gdsWODBcoZCMkPIaaHIopEJ25hvrWFd5YZ4v/ekfM3vm1CoN1lJo/e9EG/wIwtqxxVeRCGsEbeD9CHlXq9F3s9gyVUNUDyOTt4O0t7hFk8jMa9CHP4ZM3NBunoPQ93n0X/6Rp+7/8rouxkLS47V7yli6Ip+ML+sk2CU1yjVUgmpUoBJlKccFGnEfgbIBhVuv8cKRM3iuf0FnjmRo5y7e9VM/y9jeG9Z0LLa7Ff054vp3Uf50S1GNvRXy325kG0Ymb0bY21sSRhQSPvavBJ//A3pWhQwT44O/iH7L94EmUXETVX+2VdMIFlFRvSUWCh0hk2D0I509yOSNreAtZEet8ppNHv7Hv+PRz/9jpyerw4p0nR0T2ygM9iMEGMIlIUtkZZGMViatFUmIxpUFJEZSifsohkPMBrtohEliJCiBovW1VjKfPTfFwszsOp1HSEk6X+DNH/0YN95z76o83wkKcQsgpda4MdFWKmXXIrX67Dym//w3yB9/cP1JqTd+jNSbfwihm2sLGm32E68omu3nrzgL2f6s1c9Ympnm/r/8HC88/hihH3S5VyEE+cF+xnbt7FRGW2/cWhWEQhKT0OsMG5MU9DkysoTchIFtCIhCUIuzzIWjTHl78WILhUQpQRTFBEFAGIQopdB0HcMw0HQNIQSBHzB5/AT1aq0nrTUsi923Heb1H/oIw7smEBfpcFUcU5yZ5sG//WuOP/IN3jNQYzy5OsnnKxoPhSO84Yd/gv133Y1p2xftOpq1GkcffYgH/+7/UCkWiaP1kTqdzbBz7250w0ApRRRGBEFAFIYIIdCN9rpoEiFaR18t6TFmnWBInyYlyy3gNgPEUxbFaJiz3n5qYYYYSaxaOzPwferVGo16A6XirlgshMByHDK5LLqhUy1XOHfqDIHfO+hKTcO0HSYO3s6r3voORiZ2k8hkNgkJCq/RYPbMKZ78ypd54duPEXgecRSSN2J+ZIeLJaEWCj73okUj1tBNk3Shn9e8673svu0QfUPDXfWLdZ4gClmameHk00/wrS98nmqxSBj4XQF8ZSRTKXbs3Y1pmYRBSGW5jNdsdv+saPWmJZIJkukUhmm2WolEjCQmpVfYaR2joM1iCW8VkBVrOB9OMO2OEymNWGktw4tjPM+jWq4QeK2XU2rjpE5ISS7fh+3YLMzMMTc9TbwJ/ZSahm6YGJbF0K5xtu+/kf6xbTipFCBw6zWK01Ocf+EY06dOEPgeUXsXrmUmr8n73FsI+fKcwTMVY9XhCYFumGiGQSqbY9cttzK8a4J0oR/NMIiCgPLiPLNnTjP53LM0KmXCwCcKwtamW9elKslks4yN70Q3dNxGk+WlEiqON18XITAsk3Q2g2VZCCkRKKSI0ETEqH2GbfppxLk/ulud8m6iGvQRobetAaIootloUFuuEMVxJ4/YmpQiyeb7sByb2RfPs7SwuC6ebPR7UtNbL9sO+kopVBwTx9E6dkPXqSfFe0dc/mHa6XnAZmVhpKYhNa39/Ha/WKw6z1ebVKhMy2JobJRcfx4pJI16nfJSaUtzWwuoJiWpXAYnkUBrW6wUMRoh4vO/9QsqUnonMAdBQL1SbbmlTVB/6QKSRn6wH103KM7NMz8zSxhcRuvoVsoBUtG4CldBabpOLt/H0LYxDKO1YTzXZWl+kSiKLjFva3mTRDJBMpPGaBMcPVStgOR7LpXlMoHvo2J1yUCstm1G1CpV+goF+keGSOUyTJ15kWa9flE76qLo+FUAw0kk2L57F7bjdOJPHMfUKtVLBqNj+VHUjsl1DNNsxd96tUa1XCGOoiu+UJ7r4vs+tmPjJBJM7N9LaXGJ6bMvbhqLXunR6pRMk+vLMTc7B4guMuB7Pp7rXqFbIxQqUnhNl6Lnoy8vLaGu0iVWcRTjuS6WbXUCm++65HI5hkaGOf/iORqNxmXttCs5DMMgm8uxbfsYZrtbv1qtsVwsYjs2UtNabM91NyUql36CIEZXV/lGsRVmJoTAc11qlSrjE+NkMhnS6TSe7zE/O8dScQnf9192q5FSYloWwyPD5PN5DNNAriEVwyPDnDl9Bq/fxUkmUUoReP5Vex/9ak94pTNDAJVSGcexSaWSCCnQpY6ma+zYtZPRsTFct8n83DyVcoWgR0fHFQXBNOnL9zEwOIBpWei63pVtr4xUKonj2FRKZWzHIY7jq0pO9Kt/s45CRTFhHFMtlxkeGlo9Y9hmG5qmoWkapmWSSqUJwoDAD1gulSiVSvieTxiGlwyQlBJd17Esi3whTyaXxTTNDghik9YUTdfp6+tjdm6O/GB/S+G5ilasvxyXRMYqpllrgIJsLrcpFdR0DU3XsG2bZCrJ8OgIYRAShAHNRpN6rUaj0cD3gw4tV0q1OuA7uYbEsiwcxyGZSmE7NoZuoBs6mqb1tITNRjaXY3Z2jnq1hpNMcDWd6lUHRAAqVtSrVRIJB8M0LmpnSykxDAMHh3Q6TTzQj4pjojgmjuMWRUchEIi2VCE12dn5L2UBWwr2pkEi4VCvVrEdB/G9DAiixR4atQZDgwMXvTvXWZCmgaa9DC/evTFSqRRz8wv09cdcTUSu+mW6Qkh81yOOIpKpFNfyUErhet6GYmIcRfiuhxDyexcQXddwXbdNL82ei+D7fsv9KEXzQsX0Ko5m0yVaQxSiKGJ5udyTPJiWiZQS13XRr+L9g1cfEMPA9zxMw+gIaRcmQ0tLJfwgIAgCFhYXCcOoA87VHJVKmWKx2AGgWq3hbWAhmqZhtufSXVi7BmOIEGLDSRimie96OI7dM36EUUTTdYmLS8RK4fsBjUaDZDJBrVbHcZyt6ViNJomEs3UqrhSNZpM4ikk4CQzToFwpt2jtRtTZNGg2XQzTRNO0ngrDRmtx0RYipUQ3Lg0fJ5kkmU51LbiUklQmjaZrBL6P3pG8LzyrERGGIfVGA7etD5WWl1ksLnVNeOUsiO+3cpILhcz5hQW8CzLoRqPRc3GWSsvUajWiqMXW5hcW2qe0QoSUSCF6LrSuteai6RqpTHrdfJPpFE4yeYmepJUT6UIITNsilUkT+AHV5fJFI2wYOol0CsuxcRstN2M7DnbCwW00iOMIKTcAJGqXgTWNQj7P8vJyqwwaRaTTqY5bq9dbVrNYLGKZFoXCahfi8nIZ3/dZKpUYHhpsyTSex/JyuaeFBb5PqVRHKUU2k6FaqxG23ZZt2z3fc4VCr9RNkpk0mq7jtt2qnXCwbJtGtXZJHiaRSmGYBnqukMdOOGia1jrUuIG5WraNu0HAFe18IZFM4rSvnFiZVBiErd0tNgr6Oo7jkEomSadTBGFAqbSMUqpzMFMpxWKxiOd71OsNmk2XdDqFaZq4rstyuQxArVajlkySSiWpVKodxnThAicSCWr1euvKqL7WnV3VWg2lFKlkcmMWJQRxrAiDsDXfVBInmehyVRv1BwghsB2nJUz2IA26ruMkEujJdGqNTKBt4JISpDIZfN/vKp2ulkj1zqQvnHwYtixgo7Nitm0zOjLS6XTPpNOUyxWEEDhrmhNWgv/K/y8sFunry7G4WOy4NiklC4uLxEpRrlQ2lFocx8YwWlKKoev09xdwEg6BH2Db1saHfNqxZ63LXDvftWtx4caVmkamL0etUunZ/LGy9vqFKPViSZm+HJqmkc3nWC6Wukqpmq5vyjriuNXWs0JrLwSsleyJbgk8myUKw04VjXZCuLLwuqZRr9dxXbfzZ6Zpkk6nKBaXWFhY2FT30nWd0dFRtLZlA6RfIkdS7TmszGUzVqnpepcAKdtrZ5ittfRcb51AubL28kIU5ZqbdTRNI1fId17aSSTIFfJYto2u65iWRa7Q15POrrbsKFTbUrZaV+8v5Blck9ULwGq7L8MwGB4ewjD0rqBvmga5bBbLsjqfs9F7CSEwNlB3N9tYYRi2zgVtUrJorVlfR0G2bJtcId9x5VJKcoV817tJTXYKYPqFL+okEjRq9VZ3RV+2U1zqBJ9kAtuxieMY2Q50WznIF/hBayLaFuvNF7iCbDaD53kUCgVs2yafzzM/v9BxDbreynOGBgeYm5/H9wNMw9hQx+plrZv3gikCP9jSu9u2jTlkEivV0eO62qVsi0w+R6VURsUxTiLReZd1Piqdy2KYJqZlom8woQs/ZNMOC73lUz3fI4oj9E1Sn7WxIAzDjjIrhMBxHMbGRtHbz8uk0632pGoVECTbO9C2bUZGRigvlztCZqxUF5VVSlGtVkmn01sGJYojPN9DSomTTqOb5roDn13XRmnahll3a2MnMU0T3/Ox1+RPei+TWxvoueRODYPs0DCZ0V3MnDtPGIS4TRfLsjZ0CeVKBdMwsG2Hubl5+vsLWJaF5/nYtrUaU9qT6u/vx7HtVjNaYvV8oWkYDAz0d76v1+uYponZ/v0wDKlUqiSTyU3d7drhNl3CIETTDfbe+VqSSYsXn3uGwL00qUcIgWGa7ea5qyidCCEwnQTbb7qVO9/zIYbG96DpBlEUUa/VNvXRlUqV4lKrKOV6HpVKtcWuSksbnG0UpNPpVgVyk41erVaZn18gavddLS+XCS+yjl+v1YiiqMWW+gc4cO8bufVN7yDZV0Bq+rUpv2uGQTKX58C9b2Rw1wS6aZHIZNB0vdU6057URppWFEVEUas/FqBaq7XM2vcvuRVpRVaJ45jlchnHtqlUqxcV0KMoolarEccxmq63XZbFtgM30zcyypEH72fhxTMErtuz2/FlB0TTdaxkim033sruw3dhJVMd35zO5TqSTK1aw/f9ntlz3O4Fk1KSSafxfZ9Gs8lisYh5EUWttcF6aamEaNdjhBCdPEYphaHrbLWw4fs+tXbuoBs66XbVU0hJKt/PoXf8IMXzZ3n+wftpLBcJL6NZQ9fNdouObN3KEAX+pi2bF8YJ03EY2n0D++56LU46293MHAeY4TwJw6Xc7opcXiphj66XJ6QULSptmhQKeRqNBo22MmAY5oZubu1O9zwfpWLsNQllqS0FDQ4MsFhcTSJtx97SLQ9KKZaXSh2rTRguZjgP8ShIo3MJzdD4HvpGtzF36jgvPPIgbvuWh61YjBACzWhdZKMffNPbMdo39yzPTnPi2w9tCoiQEs0wMG2HsQO3MHH7ndip9Pqu8jggXj4Nj/wyWarMkCWKIpaWSgwMDq4TMg3DYMf2bR3K6zgOetvVJXuouEopisUlCv2FDoMql8uYltkBJJFwWC6X0XWdVCqFkKIttyty2dyW3FYUtt55BcgsU/DorxBn/xCZm+iAghCYtsO2G29lePc+Fs+d5cg3H8CtVgh9v+dxhrWsrH/HOLsOHkIf2nMD0y8c4fhj36BZ6S0sCiHRDB1NN0hkc9xw9+spbNuJYTu9aWPkE5dPEXzlZ9Crk+QTOYRQKCWo12qUy+WWOHhBrrH2WZqm0deXo1yudJKqC/36crlFbVcy+0qlQl9f3xqJxME0DFLpFFK2qHLCcVBK9VQlekkl5XK5Q0aEUOQTIXrlNMFXfhrjzX+IzO4GzexmT7bDyN79DO7aTb1c4tTjjzJ3+jih7xOFwboNr+KY2ZPHKJ47g/71v/gTGsulDbrEdaSuk8z2sevgYQZ2TmCnM5uesSB0ieefIvj6L6GqU0gUAykXQ4vxQ40wDJmbnSWby266KEII+nI5ctlsF1ArEky11lJrFxeLWJbF8vIysVJdNwBJKdm5cwcvJQ9tOJUoYm52tqNdGVrMQMpFolDLkwRf/kmM7/sMcvAQ6HZPkpPpH+S2t72bwG1SLS4w+cyTLEyeagETRsTRqoIReB66V6+hmyZCyNYxAClJZLIMju9haGIvyVweazMFdO1xsaBBePxviZ78E1Sz2PmrwUyArbcAWQnuxYVFBoeHXjIxu/Dv4zhmZmaWKI46It65c+e7XN+Vqq8XFxY7wRzA1mMGM8Gq0Fg5T/CVn0M7/An0fR8CI9E5Pt0rFShs20lhbAdB4NMsL7M0fZ65Uy9QmplqlSHiGP3WN70DK5HASiQxnAR2MtW6tu5iWmciH+WWCB75FPGL34Sgu/SasiKGsw0qbraTmM1Mz5DL922YKG6mdQVBQBhFJBIOpmFSrlQ67Mq5hONrGzGrmemZLmV3ONsgdcG/xqaaRcJv/S7xzBMYd38KYfd1ubBe8cIwLYyBITIDQ+w6eJgoDPEaNfxGA33XwcOXsY0iCJtEZ79C+PjvoypT7YOV3cPSFTvyHqcWFFH7yECz2WTy9CR79u3Zcra8qgXZRI1GS9Pq6wMU1VqtQwQud0RRxOTpya6aviZbc+h5dV/QJD59P/7iUfQ7fhZt55tBdzpHqreSNiQyORKZHEK1CswXZxEqhsgjLp8mfPQzxLNPQbj5BcJzFYO/f3KU6pq74TVNY2zbNsa2jW359jelWmBWqhUKhUI7n4AgDJErfVuX46pixdT5KabOn+9Sk9N2wAcOTzOUeQmBUbeQw4fQX/NLyOwEaFZPN7bxlTFeVanIRTj9WwTCR9WmCB7/H2331NjydbL3PZ/n+em+riYCwzAY3z1Oob//sjsMr0jcWFzkzKkznbxjRf6/abTEW25a2vrllkYCueNejDs+iUiNtdzYFoDRfvl1xU9pE+9EbOb3VNSisqUXCB7+NOFj/w1VfAHirXeBr9whdmox2XXHbxzHVCtVHMdpJ2viFQOjtFRaBwaAqUe8ZqL00tZxQR6mSqeIjv09cfEoIjeOMDMtT7QJMCIqn1Yys6u3jBCHEIdEs48RffdzxFPfhujSz0bUPcm/PjPAmWK652GZXRPj9A+8/JailGJxYZHJ0+vBABgvVHnXwQWSl3FjNZqJHLsT7dYfQxu+C6Te+lrnsi7MBFUMKkaFDaKT/0R09O9RxeMQR1ekE/7YTIIvPDvc9U8irY0po2OjjG3fdlk9wFzkqaWpc+eZnpru2WdlaDHvuGWW/SONK9PSKzVEYR/agQ+g7XkvQm9T5bbV/H8Rx7PXbLBOjgAAAABJRU5ErkJggg==";
+
+    const STORAGE_KEY = "HABIT_POINTS_DATA_v1_2_2";
 
     const DEFAULT_DATA = {
       version: "1.2.1",
@@ -933,7 +916,7 @@
         };
 
         const loadData = () => {
-          const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("HABIT_POINTS_DATA_v1_2");
+          const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("HABIT_POINTS_DATA_v1_2_1") || localStorage.getItem("HABIT_POINTS_DATA_v1_2");
           if (saved) {
             try {
               const parsed = JSON.parse(saved);
