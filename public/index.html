@@ -105,17 +105,18 @@
               </span>
             </button>
 
-            <!-- 语音夸奖开关 -->
+            <!-- AI 语音助手开关 (支持切换：台湾绘本姐姐AI / 甜美普通话AI / 静音) -->
             <button @click="toggleVoice" 
                     :class="voiceEnabled ? 'bg-emerald-500 text-white border-emerald-700' : 'bg-white text-slate-500 border-slate-300'"
+                    title="点击切换：台湾绘本姐姐AI语音 / 甜美普通话AI语音 / 静音"
                     class="text-[11px] font-extrabold px-2 py-1 rounded-full border-b-2 flex items-center gap-1 transition active:translate-y-0.5 whitespace-nowrap shadow-2xs">
-              <span>{{ voiceEnabled ? '🔊 语音' : '🔇 静音' }}</span>
+              <span>{{ !voiceEnabled ? '🔇 静音' : (voiceStyle === 'tw' ? '🎙️ 台湾姐姐AI' : '🎙️ 甜美女声AI') }}</span>
             </button>
 
             <!-- 版本日志按钮 -->
             <button @click="showChangelogModal = true" 
                     class="text-[11px] bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 border-b-2 font-extrabold px-2 py-1 rounded-full flex items-center gap-0.5 transition active:translate-y-0.5 whitespace-nowrap shadow-2xs">
-              <span>v2.2.0</span>
+              <span>v2.3.0</span>
               <span>📜</span>
             </button>
           </div>
@@ -1215,10 +1216,23 @@
           </div>
 
           <div class="mt-3 overflow-y-auto space-y-3.5 pr-1 text-xs text-slate-600">
-            <!-- v2.2.0 -->
-            <div class="p-3.5 bg-gradient-to-br from-sky-50 via-indigo-50/70 to-emerald-50/70 border-2 border-sky-400 rounded-2xl">
+            <!-- v2.3.0 -->
+            <div class="p-3.5 bg-gradient-to-br from-emerald-50 via-teal-50/70 to-indigo-50/70 border-2 border-emerald-400 rounded-2xl">
               <div class="flex items-center justify-between mb-1.5">
-                <span class="font-black text-sky-900 text-xs sm:text-sm">☁️ v2.2.0 全端实时云同步版 (当前最新版)</span>
+                <span class="font-black text-emerald-900 text-xs sm:text-sm">🎙️ v2.3.0 在线AI语音播报助手与成长型思维版 (当前最新版)</span>
+                <span class="text-[10px] text-slate-500 font-bold">2026-10-30</span>
+              </div>
+              <ul class="list-disc pl-4 space-y-1 text-slate-700 text-[11px]">
+                <li><strong>🎙️ 在线免费 AI 神经网络语音助手 (`/api/tts`)</strong>：集成云端 AI 自然女声播报网关（支持一键切换「🎙️台湾绘本姐姐AI」与「🎙️甜美普通话AI」），搭配 7 天边缘缓存与本地严格女声锁定兜底，彻底告别浏览器随机切换机械男声/女声的问题！</li>
+                <li><strong>🌱 《如何培养孩子自主学习力》「成长型思维」过程反馈词库</strong>：将打卡语音与萌宠对话升级为针对“努力过程、专注投入、费曼教弟弟”的过程式表扬，避免单向评价聪明或只看分数。</li>
+                <li><strong>🔀 多端断网并发打卡重连自动合并加固</strong>：监听设备网络恢复（`online` 事件）自动合并离线流水，服务端按时间戳自动重算同日重复次数序号（`dailySeq`），多台设备离线同时加分绝不覆盖、绝不重复计分。</li>
+              </ul>
+            </div>
+
+            <!-- v2.2.0 -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="font-black text-sky-900 text-xs sm:text-sm">☁️ v2.2.0 全端实时云同步版</span>
                 <span class="text-[10px] text-slate-500 font-bold">2026-10-30</span>
               </div>
               <ul class="list-disc pl-4 space-y-1 text-slate-700 text-[11px]">
@@ -1343,23 +1357,62 @@
           });
         } catch(e) {}
       },
-      speak(text, enabled = true) {
-        if (!enabled || !('speechSynthesis' in window)) return;
+      speakLocalFemaleFallback(text, style = 'tw') {
+        if (!('speechSynthesis' in window)) return;
         try {
           window.speechSynthesis.cancel();
           const utter = new SpeechSynthesisUtterance(text);
-          utter.lang = 'zh-CN';
+          const voices = window.speechSynthesis.getVoices() || [];
+          const maleKeywords = /eddy|reed|rocko|grandpa|daniel|yunxi|yunjian|kangkang|male|男/i;
+          const zhVoices = voices.filter(v => /zh|cmn|chi/i.test(v.lang || v.name) && !maleKeywords.test(v.name));
+          // 优先匹配温柔女声：Meijia (美佳-台湾女声) / Xiaoyi / Xiaoxiao / Tingting (婷婷)
+          const preferred = zhVoices.find(v => style === 'tw' && /meijia|美佳|tw|taiwan|晓伊|xiaoyi/i.test(v.name + ' ' + v.lang))
+            || zhVoices.find(v => /tingting|婷婷|xiaoxiao|晓晓|meijia|美佳|female|女|shelley|flo/i.test(v.name))
+            || zhVoices[0];
+          if (preferred) {
+            utter.voice = preferred;
+            utter.lang = preferred.lang || 'zh-CN';
+          } else {
+            utter.lang = style === 'tw' ? 'zh-TW' : 'zh-CN';
+          }
           utter.rate = 1.05;
-          utter.pitch = 1.15;
+          utter.pitch = 1.12;
           window.speechSynthesis.speak(utter);
         } catch(e) {}
+      },
+      speak(text, enabled = true, style = 'tw') {
+        if (!enabled || !text) return;
+        try {
+          if (this.currentAudio) {
+            this.currentAudio.pause();
+            this.currentAudio = null;
+          }
+          if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+          }
+          const ttsUrl = `/api/tts?style=${encodeURIComponent(style)}&text=${encodeURIComponent(text)}`;
+          const audio = new Audio(ttsUrl);
+          audio.playbackRate = style === 'tw' ? 1.12 : 1.08;
+          this.currentAudio = audio;
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(() => {
+              this.speakLocalFemaleFallback(text, style);
+            });
+          }
+          audio.onerror = () => {
+            this.speakLocalFemaleFallback(text, style);
+          };
+        } catch(e) {
+          this.speakLocalFemaleFallback(text, style);
+        }
       }
     };
 
     const STORAGE_KEY = "HABIT_POINTS_DATA_v1_2_2";
 
     const DEFAULT_DATA = {
-      version: "2.2.0",
+      version: "2.3.0",
       parentPin: "8888",
       activeChildId: "brayden",
       children: [
@@ -1417,6 +1470,7 @@
         const state = ref(JSON.parse(JSON.stringify(DEFAULT_DATA)));
         const activeTab = ref('quests');
         const voiceEnabled = ref(true);
+        const voiceStyle = ref('tw'); // 'tw' (台湾绘本姐姐AI) | 'cn' (甜美普通话AI)
         const parentUnlocked = ref(false);
         const showQuickAuditDrawer = ref(false);
         const ledgerFilter = ref('all'); // 'all' | 'pending' | 'duplicate' | 'brayden' | 'kayden'
@@ -1852,10 +1906,34 @@
         };
 
         const toggleVoice = () => {
-          voiceEnabled.value = !voiceEnabled.value;
-          if (voiceEnabled.value) {
-            SoundAndVoiceEngine.speak(`${currentChild.value.nickName}，语音夸奖已开启，加油闯关吧！`, true);
+          if (voiceEnabled.value && voiceStyle.value === 'tw') {
+            voiceStyle.value = 'cn';
+            SoundAndVoiceEngine.speak(`已切换为甜美普通话AI姐姐语音，${currentChild.value.nickName}加油闯关吧！`, true, 'cn');
+          } else if (voiceEnabled.value && voiceStyle.value === 'cn') {
+            voiceEnabled.value = false;
+            showFloatingReward('🔇', '语音播报已静音', 0, false);
+          } else {
+            voiceEnabled.value = true;
+            voiceStyle.value = 'tw';
+            SoundAndVoiceEngine.speak(`台湾绘本姐姐AI语音已开启，${currentChild.value.nickName}享受今天努力的过程吧！`, true, 'tw');
           }
+        };
+
+        const getProcessPraise = (child, taskName, points) => {
+          const n = child.nickName;
+          if (taskName.includes('教弟') || taskName.includes('读绘本')) {
+            return `哇！${n}耐心地用自己的话把知识讲给弟弟听，做到了真正的理解，你是最温暖的费曼小老师，加${points}分！`;
+          }
+          if (taskName.includes('奥数') || taskName.includes('KooBits')) {
+            return `太赞啦${n}！完成${taskName}，一步一步自己动脑筋攻克挑战，这种专注钻研的过程让你的大脑更强壮啦，加${points}分！`;
+          }
+          if (taskName.includes('练琴') || taskName.includes('钢琴')) {
+            return `好听极啦${n}！完成${taskName}，耐心地打磨每一个音符、享受音乐的节奏感，你的专注力肌肉又升级啦，加${points}分！`;
+          }
+          if (taskName.includes('写') || taskName.includes('绘本') || taskName.includes('单词')) {
+            return `好样的${n}！完成${taskName}，一笔一划用心投入、大声开口尝试，享受每一次小小的进步，奖励${points}分！`;
+          }
+          return `太棒啦${n}！主动完成${taskName}，说到做到、自己管理好自己的习惯，奖励${points}分！`;
         };
 
         const triggerMascotBounce = (speechText) => {
@@ -1871,19 +1949,19 @@
           const kid = currentChild.value;
           const cheers = isBrayden.value
             ? [
-                `健健哥哥最聪明啦！现在已经有 ${kid.currentPoints} 分，${nextMilestoneText.value}！`,
-                `猫头鹰为你加油！诚实打卡、认真完成作业的健健最帅气！`,
-                `健健不仅是学习小能手，还是教弟弟安安的好哥哥！`
+                `健健哥哥！每一次专注动脑筋、自己独立解决问题的过程都超级酷！现在已经有 ${kid.currentPoints} 分，${nextMilestoneText.value}！`,
+                `猫头鹰为你喝彩！当你把学会的本领用自己的话讲给弟弟安安听时，你就成了真正的学习大师！`,
+                `不怕遇到难题，从每一次尝试和错误中发现新方法，健健每天都在突破新难度！`
               ]
             : [
-                `嗷呜～安安宝贝最乖啦！小老虎最喜欢看安安诚实打卡、认真吃饭和收玩具啦！`,
-                `安安加油！现在已经有 ${kid.currentPoints} 分啦，快去点亮今天的大星星吧！`,
-                `安安的小手真巧，会写数字、写字母还会读绘本，太厉害啦！`
+                `嗷呜～小老虎最喜欢看安安宝贝自己收玩具、大口吃饭、一笔一划认真写字的过程啦！`,
+                `安安加油！每一次开口大声读绘本、说新单词，安安都在变得更棒，快去点亮今天的大星星吧！`,
+                `安安的小手真稳，一步一步做好每一件小事，小老虎为你骄傲！`
               ];
           const picked = cheers[Math.floor(Math.random() * cheers.length)];
           triggerMascotBounce(picked);
           SoundAndVoiceEngine.playEarnSound();
-          SoundAndVoiceEngine.speak(picked, voiceEnabled.value);
+          SoundAndVoiceEngine.speak(picked, voiceEnabled.value, voiceStyle.value);
         };
 
         const selectChild = (id) => {
@@ -1986,16 +2064,16 @@
             triggerConfetti(newCount >= 5);
             const starNum = newCount >= 5 ? 3 : (newCount >= 3 ? 2 : 1);
             const praise = newCount >= 5 
-              ? `哇！太棒啦${child.nickName}！完成${taskName}，加${points}分！今日三颗能量星全部集齐，大满贯！`
-              : `好样的${child.nickName}！完成${taskName}，加${points}分！成功点亮今日第${starNum}颗能量星！`;
+              ? `哇！太棒啦${child.nickName}！坚持完成${taskName}，今日三颗能量星全部集齐，你的专注与坚持真让人佩服，加${points}分！`
+              : `好样的${child.nickName}！认真完成${taskName}，一步一个脚印点亮今日第${starNum}颗能量星，加${points}分！`;
             triggerMascotBounce(praise);
-            SoundAndVoiceEngine.speak(praise, voiceEnabled.value);
+            SoundAndVoiceEngine.speak(praise, voiceEnabled.value, voiceStyle.value);
           } else {
             SoundAndVoiceEngine.playEarnSound();
             triggerConfetti(false);
-            const praise = `太棒啦${child.nickName}！${taskName}，奖励${points}分！`;
+            const praise = getProcessPraise(child, taskName, points);
             triggerMascotBounce(praise);
-            SoundAndVoiceEngine.speak(praise, voiceEnabled.value);
+            SoundAndVoiceEngine.speak(praise, voiceEnabled.value, voiceStyle.value);
           }
 
           saveData();
@@ -2100,7 +2178,9 @@
           child.dailyRedemptions[today][wish.id] = (child.dailyRedemptions[today][wish.id] || 0) + 1;
 
           if (!child.tickets) child.tickets = [];
-          const ticketId = 'tk_' + Date.now();
+          const nowMs = Date.now();
+          const randSuffix = Math.random().toString(36).slice(2, 6);
+          const ticketId = 'tk_' + nowMs + '_' + randSuffix;
           child.tickets.unshift({
             id: ticketId,
             wishId: wish.id,
@@ -2112,7 +2192,7 @@
           });
 
           state.value.transactions.unshift({
-            id: 'tx_' + Date.now(),
+            id: 'tx_' + nowMs + '_' + randSuffix,
             dateKey: today,
             ticketId: ticketId,
             timestamp: getTimestamp(),
@@ -2126,9 +2206,9 @@
 
           SoundAndVoiceEngine.playStarFanfare();
           triggerConfetti(true);
-          const msg = `恭喜${child.nickName}！成功兑换${wish.title}！金色奖券已经放进你的奖券包啦！`;
+          const msg = `恭喜${child.nickName}！用自己平时的努力和坚持成功兑换${wish.title}！金色奖券已经放进你的奖券包啦！`;
           triggerMascotBounce(msg);
-          SoundAndVoiceEngine.speak(msg, voiceEnabled.value);
+          SoundAndVoiceEngine.speak(msg, voiceEnabled.value, voiceStyle.value);
           saveData();
           activeTab.value = 'wallet';
         };
@@ -2234,6 +2314,7 @@
             }
           }, 4000);
           window.addEventListener('focus', () => syncFromCloud(false));
+          window.addEventListener('online', () => syncFromCloud(true));
           document.addEventListener('visibilitychange', () => {
             if (!document.hidden) syncFromCloud(false);
           });
@@ -2243,6 +2324,7 @@
           state,
           activeTab,
           voiceEnabled,
+          voiceStyle,
           parentUnlocked,
           cloudSyncStatus,
           lastSyncTimeStr,

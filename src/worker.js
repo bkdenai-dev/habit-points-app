@@ -65,6 +65,17 @@ function mergeAndRecomputeState(existing, incoming) {
     return tb - ta;
   });
 
+  // Recompute dailySeq chronologically (oldest -> newest) so offline concurrent check-ins on 2+ devices accurately flag duplicates
+  const seqCounter = {};
+  for (let i = normalTxs.length - 1; i >= 0; i--) {
+    const t = normalTxs[i];
+    if (t && t.type === "earn" && t.taskKey && t.taskKey !== "init" && t.auditStatus !== "rejected") {
+      const k = `${t.childId}_${t.dateKey || "2026-10-29"}_${t.taskKey}`;
+      seqCounter[k] = (seqCounter[k] || 0) + 1;
+      t.dailySeq = seqCounter[k];
+    }
+  }
+
   const finalTransactions = [...normalTxs.slice(0, 300), ...initTxs];
 
   // Recompute each child's points, dailyTasks, dailyRedemptions, and merge tickets
@@ -201,6 +212,44 @@ export default {
           "Access-Control-Allow-Headers": "Content-Type"
         }
       });
+    }
+
+    if (url.pathname === "/api/tts" && request.method === "GET") {
+      const text = (url.searchParams.get("text") || "").trim().slice(0, 180);
+      const style = url.searchParams.get("style") || "tw"; // 'tw' (温柔绘本台湾姐姐音) | 'cn' (标准甜美女声)
+      if (!text) {
+        return new Response("Missing text", { status: 400 });
+      }
+      const tl = style === "cn" ? "zh-CN" : "zh-TW";
+      const ttsUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${tl}&client=tw-ob&ttsspeed=1`;
+      try {
+        const cache = caches.default;
+        const cacheKey = new Request(url.toString(), request);
+        let cachedResp = await cache.match(cacheKey);
+        if (cachedResp) return cachedResp;
+
+        const upstream = await fetch(ttsUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+          }
+        });
+        if (!upstream.ok) {
+          return new Response("TTS upstream error", { status: 502 });
+        }
+        const audioBuf = await upstream.arrayBuffer();
+        const resp = new Response(audioBuf, {
+          status: 200,
+          headers: {
+            "Content-Type": "audio/mpeg",
+            "Cache-Control": "public, max-age=604800",
+            "Access-Control-Allow-Origin": "*"
+          }
+        });
+        ctx.waitUntil(cache.put(cacheKey, resp.clone()));
+        return resp;
+      } catch (e) {
+        return new Response(String(e), { status: 500 });
+      }
     }
 
     if (url.pathname.startsWith("/api/")) {
