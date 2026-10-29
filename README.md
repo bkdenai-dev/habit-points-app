@@ -8,7 +8,7 @@
 - **每日限额**：所有心愿兑换每人每天最多兑换 1 次（防沉迷熔断机制）
 - **架构模式**：Local-First PWA，零服务器依赖，数据实时在浏览器 LocalStorage 持久化，支持一键 JSON 导出与恢复
 
-## 角色与任务体系 (v1.2.0)
+## 角色与任务体系 (v1.2.1)
 - **Brayden (健健 🦉 哥哥 • 探索求知)**：
   - KooBits Math & Chinese 每日挑战分（Challenge Points 1:1 结算）
   - 奥数作业（5分）、New Journey（5分）
@@ -26,12 +26,18 @@
 - 🌊 去水上乐园畅玩：1,000 PTS（SGD $10.00）
 - ✈️ 全家出国旅游：5,000 PTS（SGD $50.00）
 
+## 生产环境与账号凭据
+- **生产访问地址**：[https://habit-points-app.bkdenai.workers.dev](https://habit-points-app.bkdenai.workers.dev)
+- **GitHub 账户**：`bkdenai@gmail.com`
+- **Cloudflare 账户**：`bkdenai@gmail.com`
+
 ## 快速使用与部署
-1. **本地使用**：直接双击 `index.html` 打开。
-2. **局域网共享**：
+1. **在线体验**：直接手机或 iPad 访问 [https://habit-points-app.bkdenai.workers.dev](https://habit-points-app.bkdenai.workers.dev)。
+2. **本地使用**：直接双击 `index.html` 打开。
+3. **局域网共享**：
    ```bash
    python3 -m http.server 8080
    ```
-3. **Cloudflare Pages / GitHub Pages 部署**：
-   - 将本目录推送到 GitHub 仓库；
-   - 在 Cloudflare Pages 中关联仓库，1 分钟即可生成免费永久 HTTPS 域名。
+4. **Cloudflare Worker / Pages 更新**：
+   - 代码已同步推送到 GitHub `bkdenai-dev/habit-points-app`；
+   - 若通过 Cloudflare Worker 直接粘贴代码，可直接复制最新 `index.html`；若通过 Pages 自动构建，GitHub 推送后将自动部署生效。
