@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>习惯养成积分大冒险 - Habit Points App</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Vue 3 CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+    .pulse-btn {
+      animation: pulse-subtle 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-sky-50 to-amber-50 min-h-screen text-slate-800 pb-16">
+  <div id="app" class="max-w-4xl mx-auto px-4 pt-6">
+    
+    <!-- 顶部状态栏与品牌 -->
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b border-indigo-100">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-3xl">🌟</span>
+          <h1 class="text-2xl font-black bg-gradient-to-r from-indigo-600 via-sky-600 to-amber-600 bg-clip-text text-transparent">
+            习惯养成积分大冒险
+          </h1>
+          <button @click="showChangelogModal = true" class="text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold px-2 py-0.5 rounded-full flex items-center gap-1 transition">
+            <span>v1.2.0</span>
+            <span class="text-[10px]">📜 更新日志</span>
+          </button>
+        </div>
+        <p class="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
+          <span>📅 {{ currentDateStr }}</span>
+          <span>•</span>
+          <span class="font-semibold text-emerald-600">1 PTS ≡ SGD $0.01 (100 PTS = $1.00)</span>
+          <span>•</span>
+          <span class="text-amber-600">所有心愿每人每日限兑 1 次</span>
+        </p>
+      </div>
+
+      <!-- 数据备份与重置工具组 -->
+      <div class="flex items-center gap-2">
+        <button @click="exportJSON" title="导出备份数据" class="px-3 py-1.5 bg-white border border-slate-200 hover:border-indigo-400 text-slate-700 text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1 transition">
+          📥 备份导出
+        </button>
+        <label class="px-3 py-1.5 bg-white border border-slate-200 hover:border-indigo-400 text-slate-700 text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1 cursor-pointer transition">
+          📤 恢复数据
+          <input type="file" accept=".json" @change="importJSON" class="hidden">
+        </label>
+        <button @click="resetToDefaultPrompt" title="重置到白板初始状态" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-lg transition">
+          🔄 重置
+        </button>
+      </div>
+    </header>
+
+    <!-- 儿童切换器（左: Brayden 健健 🦉，右: Kayden 安安 🐯） -->
+    <section class="mt-6">
+      <div class="grid grid-cols-2 gap-4">
+        <div 
+          v-for="kid in state.children" 
+          :key="kid.id"
+          @click="selectChild(kid.id)"
+          :class="[
+            'cursor-pointer rounded-2xl p-4 transition-all duration-300 relative overflow-hidden border-2',
+            state.activeChildId === kid.id 
+              ? 'bg-white border-indigo-500 shadow-xl scale-[1.02] ring-4 ring-indigo-100' 
+              : 'bg-white/70 border-slate-200 opacity-75 hover:opacity-100 hover:bg-white hover:shadow-md'
+          ]"
+        >
+          <!-- 激活标记角标 -->
+          <div v-if="state.activeChildId === kid.id" class="absolute top-2 right-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+            当前打卡中
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="text-4xl p-2 rounded-2xl bg-gradient-to-tr" :class="kid.id === 'brayden' ? 'from-sky-100 to-indigo-100' : 'from-amber-100 to-orange-100'">
+              {{ kid.avatar }}
+            </div>
+            <div>
+              <div class="font-extrabold text-lg text-slate-800 flex items-center gap-1.5">
+                {{ kid.name }}
+                <span class="text-xs font-bold px-1.5 py-0.5 rounded" :class="kid.id === 'brayden' ? 'bg-sky-100 text-sky-800' : 'bg-amber-100 text-amber-800'">
+                  {{ kid.nickName }}
+                </span>
+              </div>
+              <div class="text-[11px] text-slate-400">{{ kid.role }}</div>
+            </div>
+          </div>
+
+          <div class="mt-3 pt-3 border-t border-slate-100 flex items-baseline justify-between">
+            <div>
+              <span class="text-3xl font-black text-indigo-600">{{ kid.currentPoints }}</span>
+              <span class="text-xs font-bold text-slate-500 ml-1">PTS</span>
+            </div>
+            <div class="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+              SGD ${{ (kid.currentPoints * 0.01).toFixed(2) }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 当前选中儿童的心愿达成双进度条 -->
+      <div class="mt-4 bg-white rounded-2xl p-4 border border-indigo-100 shadow-sm">
+        <div class="text-xs font-bold text-slate-500 mb-2 flex items-center justify-between">
+          <span>🎯 {{ currentChild.avatar }} {{ currentChild.name }} ({{ currentChild.nickName }}) 的超级心愿达成率</span>
+          <span class="text-indigo-600 font-semibold">1 PTS ≡ SGD $0.01</span>
+        </div>
+        
+        <div class="space-y-3">
+          <!-- 1000分 水上乐园 -->
+          <div>
+            <div class="flex justify-between text-xs font-semibold mb-1">
+              <span class="text-sky-700">🌊 去水上乐园 (1,000 PTS = $10.00)</span>
+              <span class="text-slate-600">
+                {{ currentChild.currentPoints }} / 1000 
+                <span class="text-indigo-600 font-bold ml-1">({{ calcPercent(currentChild.currentPoints, 1000) }}%)</span>
+              </span>
+            </div>
+            <div class="w-full h-3 bg-sky-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-sky-400 to-blue-600 rounded-full transition-all duration-500" :style="{ width: calcPercent(currentChild.currentPoints, 1000) + '%' }"></div>
+            </div>
+          </div>
+
+          <!-- 5000分 出国旅游 -->
+          <div>
+            <div class="flex justify-between text-xs font-semibold mb-1">
+              <span class="text-amber-700">✈️ 全家出国旅游 (5,000 PTS = $50.00)</span>
+              <span class="text-slate-600">
+                {{ currentChild.currentPoints }} / 5000 
+                <span class="text-indigo-600 font-bold ml-1">({{ calcPercent(currentChild.currentPoints, 5000) }}%)</span>
+              </span>
+            </div>
+            <div class="w-full h-3 bg-amber-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-500" :style="{ width: calcPercent(currentChild.currentPoints, 5000) + '%' }"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 专属打卡区域 A：Brayden (健健 🦉) -->
+    <section v-if="state.activeChildId === 'brayden'" class="mt-8">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
+            <span>🦉</span> Brayden (健健) 的专属成长任务
+          </h2>
+          <p class="text-xs text-slate-500">学业攻关 • KooBits 挑战分 • 琴艺 • 榜样兄长</p>
+        </div>
+        <span class="text-xs bg-sky-100 text-sky-800 font-bold px-2 py-1 rounded-md">进阶学习与好习惯</span>
+      </div>
+
+      <!-- 分组 1: KooBits 挑战分 (根据当天的 Challenge Point 最终得分实名计分) -->
+      <div class="mb-5 bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-200 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-xl">🏆</span>
+          <h3 class="font-bold text-sm text-sky-900">KooBits 每日挑战得分 (Challenge Points 1:1 计分)</h3>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- KooBits Math -->
+          <div class="bg-white rounded-xl p-3 border border-sky-200 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-xs text-slate-800 flex items-center gap-1">
+                <span>🔢</span> KooBits Math 挑战分
+              </div>
+              <div class="text-[11px] text-slate-400">输入今日最终 CP 得分</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="number" v-model.number="braydenInputs.koobitsMathCP" min="1" max="500" placeholder="CP分" class="w-16 px-2 py-1 text-center font-bold border rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-sky-400 outline-none">
+              <button @click="addBraydenCP('KooBits Math', braydenInputs.koobitsMathCP)" class="px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-lg transition active:scale-95 shadow-sm">
+                +{{ braydenInputs.koobitsMathCP || 0 }} 分
+              </button>
+            </div>
+          </div>
+
+          <!-- KooBits Chinese -->
+          <div class="bg-white rounded-xl p-3 border border-sky-200 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-xs text-slate-800 flex items-center gap-1">
+                <span>🇨🇳</span> KooBits Chinese 挑战分
+              </div>
+              <div class="text-[11px] text-slate-400">输入今日最终 CP 得分</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="number" v-model.number="braydenInputs.koobitsChineseCP" min="1" max="500" placeholder="CP分" class="w-16 px-2 py-1 text-center font-bold border rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-sky-400 outline-none">
+              <button @click="addBraydenCP('KooBits Chinese', braydenInputs.koobitsChineseCP)" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition active:scale-95 shadow-sm">
+                +{{ braydenInputs.koobitsChineseCP || 0 }} 分
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 分组 2: 学业与乐器攻关 -->
+      <div class="mb-5">
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">📚 学业功课与钢琴艺术</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <button @click="addEarn('奥数作业', 5, '高质量独立完成奥数作业')" class="bg-white p-3 rounded-xl border border-slate-200 hover:border-indigo-400 shadow-sm text-left transition active:scale-95 flex flex-col justify-between">
+            <div class="flex items-center gap-1.5 font-bold text-xs text-slate-800">
+              <span>🧠</span> 完成奥数作业
+            </div>
+            <div class="mt-2 flex items-center justify-between">
+              <span class="text-[10px] text-slate-400">思维挑战</span>
+              <span class="font-extrabold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded text-xs">+5 分</span>
+            </div>
+          </button>
+
+          <button @click="addEarn('New Journey 作业', 5, '按时完成 New Journey 练习')" class="bg-white p-3 rounded-xl border border-slate-200 hover:border-indigo-400 shadow-sm text-left transition active:scale-95 flex flex-col justify-between">
+            <div class="flex items-center gap-1.5 font-bold text-xs text-slate-800">
+              <span>📘</span> New Journey
+            </div>
+            <div class="mt-2 flex items-center justify-between">
+              <span class="text-[10px] text-slate-400">英语进阶</span>
+              <span class="font-extrabold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded text-xs">+5 分</span>
+            </div>
+          </button>
+
+          <button @click="addEarn('钢琴练习 (15分钟)', 5, '专注按乐谱练习 15 分钟')" class="bg-white p-3 rounded-xl border border-slate-200 hover:border-pink-400 shadow-sm text-left transition active:scale-95 flex flex-col justify-between">
+            <div class="flex items-center gap-1.5 font-bold text-xs text-slate-800">
+              <span>🎹</span> 练琴 15 分钟
+            </div>
+            <div class="mt-2 flex items-center justify-between">
+              <span class="text-[10px] text-slate-400">基础练习</span>
+              <span class="font-extrabold text-pink-600 bg-pink-50 px-1.5 py-0.5 rounded text-xs">+5 分</span>
+            </div>
+          </button>
+
+          <button @click="addEarn('钢琴练习 (30分钟)', 10, '沉浸式高质量练琴 30 分钟')" class="bg-white p-3 rounded-xl border border-slate-200 hover:border-pink-500 shadow-sm text-left transition active:scale-95 flex flex-col justify-between">
+            <div class="flex items-center gap-1.5 font-bold text-xs text-slate-800">
+              <span>🎵</span> 练琴 30 分钟
+            </div>
+            <div class="mt-2 flex items-center justify-between">
+              <span class="text-[10px] text-slate-400">深度沉浸</span>
+              <span class="font-extrabold text-pink-600 bg-pink-50 px-1.5 py-0.5 rounded text-xs">+10 分</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- 分组 3: 榜样兄长 (教导陪伴弟弟) -->
+      <div class="mb-5 bg-amber-50/60 border border-amber-200 rounded-2xl p-3.5">
+        <h3 class="text-xs font-bold text-amber-900 mb-2.5 flex items-center gap-1.5">
+          <span>👨‍🏫</span> 榜样兄长勋章（陪伴与教导弟弟 Kayden）
+        </h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button @click="addEarn('教弟弟汉字', 2, '耐心地教会弟弟一个新汉字')" class="bg-white p-2.5 rounded-xl border border-amber-200 hover:border-amber-400 text-left transition active:scale-95">
+            <div class="font-bold text-xs text-slate-800 flex items-center gap-1"><span>🀄</span> 教弟新汉字</div>
+            <div class="text-[10px] text-amber-700 font-bold mt-1.5">+2 分 ($0.02)</div>
+          </button>
+          <button @click="addEarn('教弟弟单词', 2, '耐心地教会弟弟一个新单词')" class="bg-white p-2.5 rounded-xl border border-amber-200 hover:border-amber-400 text-left transition active:scale-95">
+            <div class="font-bold text-xs text-slate-800 flex items-center gap-1"><span>🗣️</span> 教弟新单词</div>
+            <div class="text-[10px] text-amber-700 font-bold mt-1.5">+2 分 ($0.02)</div>
+          </button>
+          <button @click="addEarn('教弟弟字母', 1, '耐心地教弟弟书写或认读新字母')" class="bg-white p-2.5 rounded-xl border border-amber-200 hover:border-amber-400 text-left transition active:scale-95">
+            <div class="font-bold text-xs text-slate-800 flex items-center gap-1"><span>🔤</span> 教弟新字母</div>
+            <div class="text-[10px] text-amber-700 font-bold mt-1.5">+1 分 ($0.01)</div>
+          </button>
+          <button @click="addEarn('给弟弟读绘本', 1, '生动地给弟弟读完一本绘本')" class="bg-white p-2.5 rounded-xl border border-amber-200 hover:border-amber-400 text-left transition active:scale-95">
+            <div class="font-bold text-xs text-slate-800 flex items-center gap-1"><span>📖</span> 陪弟读绘本</div>
+            <div class="text-[10px] text-amber-700 font-bold mt-1.5">+1 分 ($0.01)</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- 分组 4: 健健的日常好习惯 (1分/项) -->
+      <div>
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">🌟 日常生活自律习惯</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          <button @click="addEarn('认真吃饭', 1, '专注用餐不挑食')" class="bg-white p-2.5 rounded-xl border border-slate-200 hover:border-emerald-300 text-left transition active:scale-95">
+            <div class="font-bold text-xs text-slate-800 flex items-center gap-1"><span>🍚</span> 认真吃饭</div>
+            <div class="text-[10px] text-emerald-600 font-bold mt-1">+1 分</div>
+          </button>
+          <button @click="addEarn('认真洗澡', 1, '主动配合洗澡干爽')" class="bg-white p-2.5 rounded-xl border border-slate-200 hover:border-sky-300 text-left transition active:scale-95">
+            <div class="font-bold text-xs text-slate-800 flex items-center gap-1"><span>🛁</span> 认真洗澡</div>
+            <div class="text-[10px] text-sky-600 font-bold mt-1">+1 分</div>
+          </button>
+          <button @click="addEarn('认真刷牙', 1, '早晚认真刷牙彻底')" class="bg-white p-2.5 rounded-xl border border-slate-200 hover:border-teal-300 text-left transition active:scale-95">
+            <div class="font-bold text-xs text-slate-800 flex items-center gap-1"><span>🪥</span> 认真刷牙</div>
+            <div class="text-[10px] text-teal-600 font-bold mt-1">+1 分</div>
+          </button>
+          <button @click="addEarn('吃蔬菜', 1, '健康均衡多吃蔬菜')" class="bg-white p-2.5 rounded-xl border border-slate-200 hover:border-green-300 text-left transition active:scale-95">
+            <div class="font-bold text-xs text-slate-800 flex items-center gap-1"><span>🥦</span> 吃蔬菜</div>
+            <div class="text-[10px] text-green-600 font-bold mt-1">+1 分</div>
+          </button>
+          <button @click="addEarn('吃水果', 1, '按时吃新鲜水果补充维生素')" class="bg-white p-2.5 rounded-xl border border-slate-200 hover:border-orange-300 text-left transition active:scale-95">
+            <div class="font-bold text-xs text-slate-800 flex items-center gap-1"><span>🍎</span> 吃水果</div>
+            <div class="text-[10px] text-orange-600 font-bold mt-1">+1 分</div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 专属打卡区域 B：Kayden (安安 🐯) -->
+    <section v-else class="mt-8">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
+            <span>🐯</span> Kayden (安安) 的专属成长任务
+          </h2>
+          <p class="text-xs text-slate-500">幼童早期启蒙 • 识字书写 • 习惯自理</p>
+        </div>
+        <span class="text-xs bg-amber-100 text-amber-800 font-bold px-2 py-1 rounded-md">启蒙与自理</span>
+      </div>
+
+      <!-- 分组 1: 英文绘本与口语 -->
+      <div class="mb-5">
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">📖 绘本与语言启蒙</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <button @click="addEarn('读英文绘本', 1, '认真读完一本英文绘本')" class="bg-white p-3.5 rounded-xl border border-slate-200 hover:border-emerald-400 shadow-sm text-left transition active:scale-95 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">📖</span>
+              <div>
+                <div class="font-bold text-xs text-slate-800">英文绘本读完一本</div>
+                <div class="text-[10px] text-slate-400">爱上阅读</div>
+              </div>
+            </div>
+            <span class="font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-xs">+1 分</span>
+          </button>
+
+          <button @click="addEarn('学会说新单词', 2, '学会准确发音并说出新单词')" class="bg-white p-3.5 rounded-xl border border-slate-200 hover:border-emerald-400 shadow-sm text-left transition active:scale-95 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">🗣️</span>
+              <div>
+                <div class="font-bold text-xs text-slate-800">学会说一个新单词</div>
+                <div class="text-[10px] text-slate-400">大声开口说</div>
+              </div>
+            </div>
+            <span class="font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-xs">+2 分</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 分组 2: 基础书写与汉字 -->
+      <div class="mb-5">
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">✍️ 笔画、数字与文字书写</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <button @click="addEarn('学写数字', 1, '学会规范书写一个数字')" class="bg-white p-3 rounded-xl border border-slate-200 hover:border-indigo-400 shadow-sm text-left transition active:scale-95 flex flex-col justify-between">
+            <div class="font-bold text-xs text-slate-800 flex items-center gap-1.5"><span>🔢</span> 学写一个数字</div>
+            <div class="mt-2 text-right font-extrabold text-indigo-600 text-xs">+1 分</div>
+          </button>
+
+          <button @click="addEarn('学写字母', 1, '学会规范书写一个英文字母')" class="bg-white p-3 rounded-xl border border-slate-200 hover:border-indigo-400 shadow-sm text-left transition active:scale-95 flex flex-col justify-between">
+            <div class="font-bold text-xs text-slate-800 flex items-center gap-1.5"><span>🔤</span> 学写一个字母</div>
+            <div class="mt-2 text-right font-extrabold text-indigo-600 text-xs">+1 分</div>
+          </button>
+
+          <button @click="addEarn('学写新单词', 2, '学会拼写并写出一个完整英语单词')" class="bg-white p-3 rounded-xl border border-slate-200 hover:border-indigo-400 shadow-sm text-left transition active:scale-95 flex flex-col justify-between">
+            <div class="font-bold text-xs text-slate-800 flex items-center gap-1.5"><span>📝</span> 写一个新单词</div>
+            <div class="mt-2 text-right font-extrabold text-indigo-600 text-xs">+2 分</div>
+          </button>
+
+          <button @click="addEarn('学写新汉字', 2, '学会笔画顺序并写出一个新汉字')" class="bg-white p-3 rounded-xl border border-slate-200 hover:border-indigo-400 shadow-sm text-left transition active:scale-95 flex flex-col justify-between">
+            <div class="font-bold text-xs text-slate-800 flex items-center gap-1.5"><span>🀄</span> 写一个新汉字</div>
+            <div class="mt-2 text-right font-extrabold text-indigo-600 text-xs">+2 分</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- 分组 3: 安安的自理与生活好习惯 -->
+      <div>
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">🧸 自律收纳与健康好习惯</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          <button @click="addEarn('收玩具', 1, '自己收拾整理玩具箱')" class="bg-white p-3 rounded-xl border border-slate-200 hover:border-amber-400 shadow-sm text-left transition active:scale-95 flex items-center justify-between">
+            <div class="flex items-center gap-1.5 font-bold text-xs text-slate-800"><span>🧸</span> 收拾玩具</div>
+            <span class="font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded text-xs">+1 分</span>
+          </button>
+          <button @click="addEarn('认真吃饭', 1, '自己乖乖坐好认真吃饭')" class="bg-white p-3 rounded-xl border border-slate-200 hover:border-emerald-300 shadow-sm text-left transition active:scale-95 flex items-center justify-between">
+            <div class="flex items-center gap-1.5 font-bold text-xs text-slate-800"><span>🍚</span> 认真吃饭</div>
+            <span class="font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded text-xs">+1 分</span>
+          </button>
+          <button @click="addEarn('认真洗澡', 1, '开心洗澡不哭闹')" class="bg-white p-3 rounded-xl border border-slate-200 hover:border-sky-300 shadow-sm text-left transition active:scale-95 flex items-center justify-between">
+            <div class="flex items-center gap-1.5 font-bold text-xs text-slate-800"><span>🛁</span> 认真洗澡</div>
+            <span class="font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded text-xs">+1 分</span>
+          </button>
+          <button @click="addEarn('认真刷牙', 1, '早晚乖乖刷干净牙齿')" class="bg-white p-3 rounded-xl border border-slate-200 hover:border-teal-300 shadow-sm text-left transition active:scale-95 flex items-center justify-between">
+            <div class="flex items-center gap-1.5 font-bold text-xs text-slate-800"><span>🪥</span> 认真刷牙</div>
+            <span class="font-bold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded text-xs">+1 分</span>
+          </button>
+          <button @click="addEarn('吃蔬菜', 1, '大口吃青菜不挑食')" class="bg-white p-3 rounded-xl border border-slate-200 hover:border-green-300 shadow-sm text-left transition active:scale-95 flex items-center justify-between">
+            <div class="flex items-center gap-1.5 font-bold text-xs text-slate-800"><span>🥦</span> 吃蔬菜</div>
+            <span class="font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded text-xs">+1 分</span>
+          </button>
+          <button @click="addEarn('吃水果', 1, '吃完一份健康水果')" class="bg-white p-3 rounded-xl border border-slate-200 hover:border-orange-300 shadow-sm text-left transition active:scale-95 flex items-center justify-between">
+            <div class="flex items-center gap-1.5 font-bold text-xs text-slate-800"><span>🍎</span> 吃水果</div>
+            <span class="font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded text-xs">+1 分</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 更多通道：音赛大成就与自定义加分 -->
+    <div class="mt-4 flex gap-2">
+      <button @click="showCompetitionModal = true" class="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition active:scale-98">
+        <span>🏆</span> 录入音乐比赛 / 考级大成就 (+100 ~ 1,000分)
+      </button>
+      <button @click="showCustomEarnModal = true" class="px-4 py-2.5 bg-white border border-slate-200 hover:border-indigo-400 text-slate-700 font-bold text-xs rounded-xl shadow-sm flex items-center gap-1 transition">
+        <span>✨</span> 特殊加分
+      </button>
+    </div>
+
+    <!-- 心愿兑换商城 (两者完全一致，游乐场调整为200分，带每日限1次熔断) -->
+    <section class="mt-8">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
+            <span>🎁</span> {{ currentChild.name }} ({{ currentChild.nickName }}) 的心愿兑换商城
+          </h2>
+          <p class="text-xs text-rose-500 font-medium">防沉迷铁律：所有兑换项目每人每天最多兑换 1 次</p>
+        </div>
+        <span class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md font-semibold">
+          当前可用: {{ currentChild.currentPoints }} PTS
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div 
+          v-for="wish in wishItems" 
+          :key="wish.id"
+          class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden"
+          :class="{ 'opacity-60 bg-slate-50': isRedeemedToday(wish.id) }"
+        >
+          <!-- 每日已使用标记 -->
+          <div v-if="isRedeemedToday(wish.id)" class="absolute top-2 right-2 bg-slate-200 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
+            今日已兑换 (明日解锁)
+          </div>
+          <div v-else-if="currentChild.currentPoints >= wish.points" class="absolute top-2 right-2 bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+            可兑换
+          </div>
+
+          <div>
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">{{ wish.icon }}</span>
+              <div>
+                <h3 class="font-extrabold text-slate-800 text-base">{{ wish.title }}</h3>
+                <p class="text-xs text-slate-400">{{ wish.desc }}</p>
+              </div>
+            </div>
+
+            <div class="mt-3 flex items-center gap-2">
+              <span class="text-2xl font-black text-indigo-600">{{ wish.points }}</span>
+              <span class="text-xs font-bold text-slate-400">PTS</span>
+              <span class="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md font-semibold">
+                等价 SGD ${{ (wish.points * 0.01).toFixed(2) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- 兑换操作按钮 -->
+          <div class="mt-4 pt-3 border-t border-slate-100">
+            <!-- 场景 1: 今日已兑换 -->
+            <button 
+              v-if="isRedeemedToday(wish.id)" 
+              disabled
+              class="w-full py-2 bg-slate-200 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed"
+            >
+              🔒 今日已兑换 (明日再来)
+            </button>
+
+            <!-- 场景 2: 积分不足 -->
+            <button 
+              v-else-if="currentChild.currentPoints < wish.points"
+              disabled
+              class="w-full py-2 bg-slate-100 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed"
+            >
+              还差 {{ wish.points - currentChild.currentPoints }} 分可兑换
+            </button>
+
+            <!-- 场景 3: 具备资格，立即兑换 -->
+            <button 
+              v-else
+              @click="confirmRedeem(wish)"
+              class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-xs rounded-xl shadow-md transition active:scale-95 pulse-btn"
+            >
+              🎉 确认兑换 (扣除 {{ wish.points }} 分)
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 积分流水账本与审计轨迹 (含撤销功能) -->
+    <section class="mt-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
+          <span>📜</span> 积分与心愿历史流水
+        </h2>
+        <span class="text-xs text-slate-400">最近 30 条实时明细</span>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div v-if="state.transactions.length === 0" class="p-8 text-center text-slate-400 text-xs">
+          暂无打卡或兑换流水记录
+        </div>
+        <div v-else class="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+          <div 
+            v-for="(tx, idx) in state.transactions" 
+            :key="tx.id"
+            class="p-3.5 flex items-center justify-between hover:bg-slate-50 transition text-xs"
+          >
+            <div class="flex items-center gap-3">
+              <span class="text-lg">
+                {{ tx.type === 'earn' ? '🟢' : (tx.type === 'redeem' ? '🟣' : '↩️') }}
+              </span>
+              <div>
+                <div class="font-bold text-slate-800 flex items-center gap-2">
+                  <span>{{ getChildName(tx.childId) }}</span>
+                  <span class="text-slate-600 font-medium">{{ tx.reason }}</span>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-0.5">
+                  {{ tx.timestamp }}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="text-right">
+                <div 
+                  class="font-black text-sm"
+                  :class="tx.pointsChange > 0 ? 'text-emerald-600' : 'text-purple-600'"
+                >
+                  {{ tx.pointsChange > 0 ? '+' : '' }}{{ tx.pointsChange }} PTS
+                </div>
+                <div class="text-[10px] text-slate-400">
+                  SGD ${{ (Math.abs(tx.pointsChange) * 0.01).toFixed(2) }}
+                </div>
+              </div>
+
+              <!-- 第一项可撤销 -->
+              <button 
+                v-if="idx === 0" 
+                @click="rollbackLastTransaction" 
+                title="撤销最近一次误触操作"
+                class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold rounded transition"
+              >
+                撤销
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 弹窗 1: 音赛成就奖励弹窗 -->
+    <div v-if="showCompetitionModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">🏆</span>
+            <h3 class="font-black text-slate-800 text-lg">录入音乐比赛 / 考级大成就</h3>
+          </div>
+          <button @click="showCompetitionModal = false" class="text-slate-400 hover:text-slate-600 text-xl font-bold">×</button>
+        </div>
+
+        <p class="text-xs text-slate-500 mb-4">为 <strong>{{ currentChild.name }}</strong> 记录重大突破，直接大幅推进心愿进度！</p>
+
+        <div class="space-y-2.5">
+          <button @click="selectCompetition(100, '音赛勇敢登台参赛基础奖')" class="w-full p-3 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-400 rounded-xl flex items-center justify-between text-xs font-bold transition">
+            <span>🎼 参赛基础奖</span>
+            <span class="text-amber-600 font-black">+100 分 ($1.00)</span>
+          </button>
+          <button @click="selectCompetition(200, '音赛获得 🥉 铜奖 (Bronze)')" class="w-full p-3 bg-amber-50/50 hover:bg-amber-100/60 border border-amber-200 rounded-xl flex items-center justify-between text-xs font-bold transition">
+            <span>🥉 铜奖 (Bronze)</span>
+            <span class="text-amber-700 font-black">+200 分 ($2.00)</span>
+          </button>
+          <button @click="selectCompetition(500, '音赛获得 🥈 银奖 (Silver)')" class="w-full p-3 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl flex items-center justify-between text-xs font-bold transition">
+            <span>🥈 银奖 (Silver)</span>
+            <span class="text-slate-700 font-black">+500 分 ($5.00)</span>
+          </button>
+          <button @click="selectCompetition(800, '音赛获得 🥇 金奖 (Gold)')" class="w-full p-3 bg-amber-100 hover:bg-amber-200 border border-amber-400 rounded-xl flex items-center justify-between text-xs font-bold transition">
+            <span>🥇 金奖 (Gold)</span>
+            <span class="text-amber-800 font-black">+800 分 ($8.00)</span>
+          </button>
+          <button @click="selectCompetition(1000, '音赛荣获 🏆 铂金奖 (Platinum)')" class="w-full p-3 bg-gradient-to-r from-amber-400 to-indigo-500 text-white rounded-xl flex items-center justify-between text-xs font-bold shadow-md transition hover:brightness-105">
+            <span>🏆 铂金奖 (Platinum) — 直接达成水上乐园！</span>
+            <span class="font-black text-amber-100">+1000 分 ($10.00)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 弹窗 2: 自定义加分弹窗 -->
+    <div v-if="showCustomEarnModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl">
+        <h3 class="font-black text-slate-800 text-base mb-2">✨ 特殊表现加分</h3>
+        <p class="text-xs text-slate-500 mb-4">记录未预设的良好行为、友善分享或特殊帮扶。</p>
+        
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-bold text-slate-600 block mb-1">加分事由</label>
+            <input type="text" v-model="customEarn.reason" placeholder="如：帮妈妈拿快递 / 主动分享" class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-400">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-600 block mb-1">奖励积分 (1 PTS = SGD $0.01)</label>
+            <input type="number" v-model.number="customEarn.points" min="1" step="1" class="w-full px-3 py-2 border rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-400">
+          </div>
+          <div class="flex gap-2 pt-2">
+            <button @click="showCustomEarnModal = false" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl">取消</button>
+            <button @click="submitCustomEarn" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl">确认增加</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 弹窗 3: 版本记录与更新日志 (Changelog Modal) -->
+    <div v-if="showChangelogModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl max-h-[85vh] flex flex-col">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">📜</span>
+            <h3 class="font-black text-slate-800 text-lg">版本记录与系统更新日志</h3>
+          </div>
+          <button @click="showChangelogModal = false" class="text-slate-400 hover:text-slate-600 text-xl font-bold">×</button>
+        </div>
+
+        <div class="mt-4 overflow-y-auto space-y-4 pr-1 text-xs text-slate-600">
+          <!-- v1.2.0 -->
+          <div class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-2xl">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-extrabold text-indigo-700 text-sm">v1.2.0 (当前最新版本)</span>
+              <span class="text-[11px] text-slate-400">2026-10-29</span>
+            </div>
+            <ul class="list-disc pl-4 space-y-1">
+              <li><strong>双儿童布局重构</strong>：左侧固定为 <strong>Brayden (健健 🦉 猫头鹰)</strong>，右侧固定为 <strong>Kayden (安安 🐯 小老虎)</strong>。</li>
+              <li><strong>Brayden 专属任务体系</strong>：
+                <ul class="list-circle pl-3 mt-0.5 space-y-0.5 text-slate-500">
+                  <li>新增 KooBits Math 与 KooBits Chinese 按当日 Challenge Points (CP) 最终得分实时计分；</li>
+                  <li>完成奥数作业 (5分)、完成 New Journey 作业 (5分)；</li>
+                  <li>练琴 15 分钟 (5分)、练琴 30 分钟 (10分)；</li>
+                  <li>榜样兄长勋章：教弟弟新汉字 (2分)、教弟弟新单词 (2分)、教弟弟新字母 (1分)、给弟弟读绘本 (1分)；</li>
+                  <li>生活自律：认真吃饭、洗澡、刷牙、吃蔬菜、吃水果 (各 1分)。</li>
+                </ul>
+              </li>
+              <li><strong>Kayden 专属任务体系</strong>：
+                <ul class="list-circle pl-3 mt-0.5 space-y-0.5 text-slate-500">
+                  <li>英文绘本读完一本 (1分)、学会说一个新单词 (2分)；</li>
+                  <li>学会写一个数字 (1分)、学会写一个字母 (1分)、学会写一个新单词 (2分)、学会写一个新的汉字 (2分)；</li>
+                  <li>自理与好习惯：收玩具 (1分)、认真吃饭 (1分)、洗澡 (1分)、刷牙 (1分)、吃蔬菜 (1分)、吃水果 (1分)。</li>
+                </ul>
+              </li>
+              <li><strong>心愿商城调优</strong>：室内游乐场 1 小时券调整为 <strong>200 PTS ($2.00)</strong>；保留每日限兑 1 次防沉迷熔断。</li>
+              <li><strong>系统治理</strong>：内置完整版本更新日志中枢与审计记录。</li>
+            </ul>
+          </div>
+
+          <!-- v1.1.0 -->
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-bold text-slate-700">v1.1.0</span>
+              <span class="text-[11px] text-slate-400">2026-10-29</span>
+            </div>
+            <ul class="list-disc pl-4 space-y-0.5 text-slate-500">
+              <li>经济体汇率订正：<code>1 PTS = SGD $0.01</code>（100 积分等价 1 新币）。</li>
+              <li>新增 15 分钟屏幕时间（30 PTS）与室内游乐场券。</li>
+              <li>引入每项心愿每日限兑 1 次的防沉迷强约束。</li>
+              <li>全面取消爱心，实行纯积分单轨制。</li>
+            </ul>
+          </div>
+
+          <!-- v1.0.0 -->
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-bold text-slate-700">v1.0.0 (MVP 初版)</span>
+              <span class="text-[11px] text-slate-400">2026-10-29</span>
+            </div>
+            <ul class="list-disc pl-4 space-y-0.5 text-slate-500">
+              <li>物理白板积分数字化，初始化底账：Brayden 148 PTS / Kayden 57 PTS。</li>
+              <li>搭载 Web Audio API 原生音效与 Canvas Confetti 爆花彩带。</li>
+              <li>实现 Local-First 本地离线持久化与 JSON 备份恢复。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 text-right">
+          <button @click="showChangelogModal = false" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition">
+            我知道了
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部页脚 -->
+    <footer class="mt-12 text-center text-[11px] text-slate-400">
+      <p>习惯养成日常积分激励系统 • v1.2.0 • 1 PTS = SGD $0.01 • 数据 Local-First 实时落盘</p>
+    </footer>
+
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+
+    // 音效合成器 (Web Audio API - 零外部依赖)
+    const AudioEngine = {
+      ctx: null,
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+      },
+      playEarnSound() {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, this.ctx.currentTime); // C5
+          osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.15); // A5
+          gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.25);
+        } catch(e) {}
+      },
+      playRedeemFanfare() {
+        try {
+          this.init();
+          const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+          notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.2, this.ctx.currentTime + idx * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + idx * 0.1 + 0.3);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(this.ctx.currentTime + idx * 0.1);
+            osc.stop(this.ctx.currentTime + idx * 0.1 + 0.3);
+          });
+        } catch(e) {}
+      }
+    };
+
+    const STORAGE_KEY = "HABIT_POINTS_DATA_v1_2";
+
+    // 默认初始数据：左侧 Brayden (健健 🦉)，右侧 Kayden (安安 🐯)
+    const DEFAULT_DATA = {
+      version: "1.2.0",
+      activeChildId: "brayden",
+      children: [
+        {
+          id: "brayden",
+          name: "Brayden",
+          nickName: "健健",
+          role: "哥哥 • 探索求知",
+          avatar: "🦉",
+          currentPoints: 148,
+          dailyRedemptions: {}
+        },
+        {
+          id: "kayden",
+          name: "Kayden",
+          nickName: "安安",
+          role: "弟弟 • 启蒙成长",
+          avatar: "🐯",
+          currentPoints: 57,
+          dailyRedemptions: {}
+        }
+      ],
+      transactions: [
+        {
+          id: "init_brayden",
+          timestamp: "2026-10-29 08:00",
+          childId: "brayden",
+          type: "earn",
+          pointsChange: 148,
+          reason: "物理白板初始底账同步 (含历史 $20.00)"
+        },
+        {
+          id: "init_kayden",
+          timestamp: "2026-10-29 08:00",
+          childId: "kayden",
+          type: "earn",
+          pointsChange: 57,
+          reason: "物理白板初始底账同步 (含历史 $6.70)"
+        }
+      ]
+    };
+
+    createApp({
+      setup() {
+        const state = ref({ ...DEFAULT_DATA });
+        
+        // Brayden KooBits 输入缓存
+        const braydenInputs = ref({
+          koobitsMathCP: 20,
+          koobitsChineseCP: 20
+        });
+
+        const showCompetitionModal = ref(false);
+        const showCustomEarnModal = ref(false);
+        const showChangelogModal = ref(false);
+        const customEarn = ref({
+          reason: '',
+          points: 5
+        });
+
+        const getTodayKey = () => {
+          const d = new Date();
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+
+        const currentDateStr = computed(() => {
+          const d = new Date();
+          const days = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+          return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${days[d.getDay()]}`;
+        });
+
+        // 统一心愿兑换项目（室内游乐场 1 小时券调整为 200 分）
+        const wishItems = [
+          {
+            id: 'screen_time',
+            icon: '📱',
+            title: '15 分钟屏幕时间',
+            desc: '劳逸结合，限定 15 分钟平板/电视体验',
+            points: 30
+          },
+          {
+            id: 'indoor_playground',
+            icon: '🎡',
+            title: '室内游乐场 1 小时券',
+            desc: '商场室内乐园尽情攀爬畅玩',
+            points: 200
+          },
+          {
+            id: 'water_park',
+            icon: '🌊',
+            title: '去水上乐园畅玩',
+            desc: '全家共享水上乐园狂欢日',
+            points: 1000
+          },
+          {
+            id: 'overseas_trip',
+            icon: '✈️',
+            title: '全家出国旅游',
+            desc: '年度超级大奖，探索大千世界',
+            points: 5000
+          }
+        ];
+
+        const saveData = () => {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.value));
+        };
+
+        const loadData = () => {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            try {
+              const parsed = JSON.parse(saved);
+              if (parsed && parsed.children) {
+                // 确保头像与昵称更新为最新规范
+                parsed.children.forEach(c => {
+                  if (c.id === 'brayden') {
+                    c.avatar = '🦉';
+                    c.nickName = '健健';
+                    c.role = '哥哥 • 探索求知';
+                  } else if (c.id === 'kayden') {
+                    c.avatar = '🐯';
+                    c.nickName = '安安';
+                    c.role = '弟弟 • 启蒙成长';
+                  }
+                });
+                state.value = parsed;
+              }
+            } catch(e) {
+              console.error("Failed to load saved data.", e);
+            }
+          }
+        };
+
+        const currentChild = computed(() => {
+          return state.value.children.find(c => c.id === state.value.activeChildId) || state.value.children[0];
+        });
+
+        const selectChild = (id) => {
+          state.value.activeChildId = id;
+          saveData();
+        };
+
+        const getChildName = (childId) => {
+          const c = state.value.children.find(k => k.id === childId);
+          return c ? `${c.avatar} ${c.name} (${c.nickName})` : childId;
+        };
+
+        const calcPercent = (pts, total) => {
+          if (!pts) return 0;
+          const p = (pts / total) * 100;
+          return Math.min(100, Math.round(p * 10) / 10);
+        };
+
+        const isRedeemedToday = (wishId) => {
+          const today = getTodayKey();
+          const child = currentChild.value;
+          if (!child.dailyRedemptions) child.dailyRedemptions = {};
+          if (!child.dailyRedemptions[today]) return false;
+          return (child.dailyRedemptions[today][wishId] || 0) >= 1;
+        };
+
+        const triggerConfetti = (isGrand = false) => {
+          if (window.confetti) {
+            window.confetti({
+              particleCount: isGrand ? 120 : 50,
+              spread: isGrand ? 90 : 60,
+              origin: { y: 0.6 }
+            });
+          }
+        };
+
+        const getTimestamp = () => {
+          const now = new Date();
+          const m = String(now.getMonth() + 1).padStart(2, '0');
+          const d = String(now.getDate()).padStart(2, '0');
+          const h = String(now.getHours()).padStart(2, '0');
+          const min = String(now.getMinutes()).padStart(2, '0');
+          return `${m}-${d} ${h}:${min}`;
+        };
+
+        const addEarn = (taskName, points, detail) => {
+          const child = currentChild.value;
+          child.currentPoints += points;
+          
+          state.value.transactions.unshift({
+            id: 'tx_' + Date.now(),
+            timestamp: getTimestamp(),
+            childId: child.id,
+            type: 'earn',
+            pointsChange: points,
+            reason: detail ? `${taskName} (${detail})` : taskName
+          });
+
+          if (state.value.transactions.length > 50) {
+            state.value.transactions.pop();
+          }
+
+          AudioEngine.playEarnSound();
+          triggerConfetti(false);
+          saveData();
+        };
+
+        // Brayden KooBits 挑战分打卡
+        const addBraydenCP = (subject, score) => {
+          const pts = Number(score) || 0;
+          if (pts <= 0) return;
+          addEarn(subject, pts, `当天 Challenge Points 最终得分结算 +${pts}分`);
+        };
+
+        const selectCompetition = (points, title) => {
+          addEarn("音乐比赛与考级", points, title);
+          showCompetitionModal.value = false;
+          AudioEngine.playRedeemFanfare();
+          triggerConfetti(true);
+        };
+
+        const submitCustomEarn = () => {
+          if (!customEarn.value.reason || !customEarn.value.points) return;
+          addEarn("特殊表现", Number(customEarn.value.points), customEarn.value.reason);
+          showCustomEarnModal.value = false;
+          customEarn.value.reason = '';
+          customEarn.value.points = 5;
+        };
+
+        const confirmRedeem = (wish) => {
+          const child = currentChild.value;
+          if (isRedeemedToday(wish.id)) {
+            alert(`【每日防沉迷限制】\n\n"${wish.title}" 今天已经兑换过了，每人每天最多兑换 1 次，请明天再来！`);
+            return;
+          }
+
+          if (child.currentPoints < wish.points) {
+            alert(`当前积分不足，还差 ${wish.points - child.currentPoints} 分！继续加油哦！`);
+            return;
+          }
+
+          const confirmed = confirm(`确定为 ${child.name} (${child.nickName}) 兑换「${wish.title}」吗？\n\n将扣除 ${wish.points} 积分（等价 SGD $${(wish.points * 0.01).toFixed(2)}）。\n注意：每项心愿每天限兑 1 次，兑换后今日锁定。`);
+          if (!confirmed) return;
+
+          child.currentPoints -= wish.points;
+
+          const today = getTodayKey();
+          if (!child.dailyRedemptions) child.dailyRedemptions = {};
+          if (!child.dailyRedemptions[today]) child.dailyRedemptions[today] = {};
+          child.dailyRedemptions[today][wish.id] = (child.dailyRedemptions[today][wish.id] || 0) + 1;
+
+          state.value.transactions.unshift({
+            id: 'tx_' + Date.now(),
+            timestamp: getTimestamp(),
+            childId: child.id,
+            type: 'redeem',
+            pointsChange: -wish.points,
+            reason: `兑换心愿: ${wish.title}`
+          });
+
+          AudioEngine.playRedeemFanfare();
+          triggerConfetti(true);
+          saveData();
+        };
+
+        const rollbackLastTransaction = () => {
+          if (state.value.transactions.length === 0) return;
+          const lastTx = state.value.transactions[0];
+          const confirmed = confirm(`确定撤销最近一次操作吗？\n\n【${getChildName(lastTx.childId)}】${lastTx.reason} (${lastTx.pointsChange > 0 ? '+' : ''}${lastTx.pointsChange} PTS)`);
+          if (!confirmed) return;
+
+          const child = state.value.children.find(c => c.id === lastTx.childId);
+          if (child) {
+            child.currentPoints -= lastTx.pointsChange;
+            if (child.currentPoints < 0) child.currentPoints = 0;
+
+            if (lastTx.type === 'redeem') {
+              const today = getTodayKey();
+              if (child.dailyRedemptions && child.dailyRedemptions[today]) {
+                for (const w of wishItems) {
+                  if (lastTx.reason.includes(w.title)) {
+                    if (child.dailyRedemptions[today][w.id] > 0) {
+                      child.dailyRedemptions[today][w.id] -= 1;
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          state.value.transactions.shift();
+          saveData();
+        };
+
+        const exportJSON = () => {
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.value, null, 2));
+          const dlAnchor = document.createElement('a');
+          const d = new Date();
+          const dateTag = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+          dlAnchor.setAttribute("href", dataStr);
+          dlAnchor.setAttribute("download", `habit_points_backup_${dateTag}.json`);
+          dlAnchor.click();
+        };
+
+        const importJSON = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            try {
+              const imported = JSON.parse(event.target.result);
+              if (imported && imported.children) {
+                state.value = imported;
+                saveData();
+                alert("✅ 数据成功恢复并同步！");
+              } else {
+                alert("❌ 文件格式不匹配！");
+              }
+            } catch(err) {
+              alert("❌ 解析 JSON 失败: " + err.message);
+            }
+          };
+          reader.readAsText(file);
+        };
+
+        const resetToDefaultPrompt = () => {
+          const confirmed = confirm("确定要将所有数据重置为初始白板底账吗？\n\nBrayden (健健 🦉): 148 PTS\nKayden (安安 🐯): 57 PTS\n请确认已备份！");
+          if (confirmed) {
+            state.value = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            saveData();
+            alert("已恢复至初始底账。");
+          }
+        };
+
+        onMounted(() => {
+          loadData();
+        });
+
+        return {
+          state,
+          currentChild,
+          currentDateStr,
+          wishItems,
+          braydenInputs,
+          showCompetitionModal,
+          showCustomEarnModal,
+          showChangelogModal,
+          customEarn,
+          selectChild,
+          getChildName,
+          calcPercent,
+          isRedeemedToday,
+          addEarn,
+          addBraydenCP,
+          selectCompetition,
+          submitCustomEarn,
+          confirmRedeem,
+          rollbackLastTransaction,
+          exportJSON,
+          importJSON,
+          resetToDefaultPrompt
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
