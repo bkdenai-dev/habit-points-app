@@ -145,7 +145,7 @@
           >
             <!-- 顶部：高精度矢量萌宠头像 + 姓名 + 段位 -->
             <div class="flex items-center gap-2 sm:gap-3">
-              <div class="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-2xl flex items-center justify-center p-1 shadow-md border-2 overflow-hidden"
+              <div class="w-11 h-11 sm:w-14 sm:h-14 flex-shrink-0 rounded-2xl flex items-center justify-center p-1 shadow-md border-2 overflow-hidden"
                    :class="state.activeChildId === kid.id ? 'bg-white border-white/80' : (kid.id === 'brayden' ? 'bg-indigo-50 border-indigo-100' : 'bg-amber-50 border-amber-100')">
                 
                 <!-- Brayden 专属绘本大眼猫头鹰 (纯矢量高精版) -->
@@ -251,26 +251,26 @@
             </div>
 
             <!-- 等级头衔徽章 -->
-            <div class="mt-2 flex items-center justify-between text-[10px] font-bold"
+            <div class="mt-2 flex flex-wrap items-center justify-between gap-1 text-[10px] font-bold"
                  :class="state.activeChildId === kid.id ? 'text-white/90' : 'text-slate-500'">
               <span class="truncate">{{ getLevelBadge(kid) }}</span>
-              <span>🔥 {{ getTodayTaskCount(kid) }} 项今日打卡</span>
+              <span class="whitespace-nowrap">🔥今日 {{ getTodayTaskCount(kid) }} 项</span>
             </div>
 
             <!-- 底部积分大字与新币折算 -->
             <div class="mt-2 pt-2 border-t flex items-baseline justify-between gap-1"
                  :class="state.activeChildId === kid.id ? 'border-white/20' : 'border-slate-100'">
               <div class="flex items-baseline">
-                <span class="text-2xl sm:text-3xl font-black tracking-tight"
+                <span class="text-xl sm:text-3xl font-black tracking-tight"
                       :class="state.activeChildId === kid.id ? 'text-yellow-300 drop-shadow-xs' : 'text-indigo-600'">
                   {{ kid.currentPoints }}
                 </span>
-                <span class="text-[10px] font-extrabold ml-1"
+                <span class="text-[10px] font-extrabold ml-0.5"
                       :class="state.activeChildId === kid.id ? 'text-white/80' : 'text-slate-400'">PTS</span>
               </div>
-              <div class="text-[11px] font-extrabold px-2 py-0.5 rounded-lg"
+              <div class="text-[10px] sm:text-[11px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-lg whitespace-nowrap"
                    :class="state.activeChildId === kid.id ? 'bg-black/25 text-emerald-200' : 'bg-emerald-50 text-emerald-700'">
-                SGD ${{ (kid.currentPoints * 0.01).toFixed(2) }}
+                ${{ (kid.currentPoints * 0.01).toFixed(2) }}
               </div>
             </div>
           </div>
@@ -362,12 +362,12 @@
 
         <!-- ================= 奇幻寻宝冒险路线图 (替代枯燥进度条) ================= -->
         <div class="mt-3.5 pt-3 border-t border-slate-100">
-          <div class="flex items-center justify-between text-xs font-extrabold text-slate-700 mb-2">
+          <div class="flex flex-wrap items-center justify-between gap-1.5 text-xs font-extrabold text-slate-700 mb-2">
             <span class="flex items-center gap-1">
               <span>🗺️</span>
               <span>{{ currentChild.nickName }}的奇幻寻宝路线图</span>
             </span>
-            <span class="text-[11px] font-black px-2 py-0.5 rounded-full"
+            <span class="text-[10px] sm:text-[11px] font-black px-2 py-0.5 rounded-full"
                   :class="isBrayden ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-800'">
               🎯 {{ nextMilestoneText }}
             </span>
@@ -416,7 +416,7 @@
           </div>
 
           <!-- 保留家长关注的两大超级心愿精确百分比微标 -->
-          <div class="mt-1.5 flex items-center justify-between text-[10px] text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-100">
+          <div class="mt-1.5 flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-100">
             <span>🌊 水上乐园: <strong class="text-sky-700">{{ currentChild.currentPoints }}/1000 ({{ calcPercent(currentChild.currentPoints, 1000) }}%)</strong></span>
             <span>✈️ 出国旅游: <strong class="text-amber-700">{{ currentChild.currentPoints }}/5000 ({{ calcPercent(currentChild.currentPoints, 5000) }}%)</strong></span>
           </div>
@@ -429,7 +429,7 @@
                 :class="activeTab === 'quests' 
                   ? (isBrayden ? 'bg-indigo-600 text-white border-indigo-800 shadow-md' : 'bg-orange-500 text-white border-orange-700 shadow-md') 
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
-                class="toy-card py-2.5 px-2 rounded-2xl border-2 border-b-4 font-black text-xs sm:text-sm flex items-center justify-center gap-1.5">
+                class="toy-card py-2.5 px-1.5 rounded-2xl border-2 border-b-4 font-black text-xs sm:text-sm flex items-center justify-center gap-1 whitespace-nowrap">
           <span class="text-base sm:text-lg">🏰</span>
           <span>今日闯关</span>
         </button>
@@ -438,10 +438,10 @@
                 :class="activeTab === 'shop' 
                   ? 'bg-emerald-600 text-white border-emerald-800 shadow-md' 
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
-                class="toy-card py-2.5 px-2 rounded-2xl border-2 border-b-4 font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 relative">
+                class="toy-card py-2.5 px-1.5 rounded-2xl border-2 border-b-4 font-black text-xs sm:text-sm flex items-center justify-center gap-1 relative whitespace-nowrap">
           <span class="text-base sm:text-lg">🎁</span>
           <span>宝藏商城</span>
-          <span v-if="affordableWishCount > 0" class="bg-rose-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full animate-bounce">
+          <span v-if="affordableWishCount > 0" class="absolute -top-2 -right-1 bg-rose-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-xs animate-bounce">
             {{ affordableWishCount }}可兑
           </span>
         </button>
@@ -450,10 +450,10 @@
                 :class="activeTab === 'wallet' 
                   ? 'bg-amber-500 text-white border-amber-700 shadow-md' 
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
-                class="toy-card py-2.5 px-2 rounded-2xl border-2 border-b-4 font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 relative">
+                class="toy-card py-2.5 px-1.5 rounded-2xl border-2 border-b-4 font-black text-xs sm:text-sm flex items-center justify-center gap-1 relative whitespace-nowrap">
           <span class="text-base sm:text-lg">🎟️</span>
-          <span>奖券与账本</span>
-          <span v-if="unusedTicketCount > 0" class="bg-indigo-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">
+          <span>奖券账本</span>
+          <span v-if="unusedTicketCount > 0" class="absolute -top-2 -right-1 bg-indigo-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-xs">
             {{ unusedTicketCount }}券
           </span>
         </button>
