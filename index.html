@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>习惯养成积分大冒险 v2.0 - Habit Points Adventure</title>
+  <title>习惯养成积分大冒险 v2.1 - Habit Points Adventure</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Vue 3 CDN -->
@@ -74,16 +74,16 @@
     <!-- 全屏飘字奖励提示 (点击任务即时多巴胺反馈) -->
     <div v-if="floatingToast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
       <div class="floating-reward px-5 py-2.5 rounded-full font-black text-base sm:text-lg text-white shadow-xl flex items-center gap-2 border-2 border-white/80 whitespace-nowrap"
-           :class="isBrayden ? 'bg-gradient-to-r from-indigo-600 to-sky-500' : 'bg-gradient-to-r from-orange-500 to-amber-500'">
+           :class="floatingToast.isWarn ? 'bg-gradient-to-r from-rose-500 to-amber-500' : (isBrayden ? 'bg-gradient-to-r from-indigo-600 to-sky-500' : 'bg-gradient-to-r from-orange-500 to-amber-500')">
         <span class="text-2xl">{{ floatingToast.icon }}</span>
         <span>{{ floatingToast.text }}</span>
-        <span class="bg-white/25 px-2 py-0.5 rounded-full text-yellow-200">+{{ floatingToast.points }} PTS</span>
+        <span v-if="floatingToast.points" class="bg-white/25 px-2 py-0.5 rounded-full text-yellow-200">+{{ floatingToast.points }} PTS</span>
       </div>
     </div>
 
     <div class="max-w-2xl sm:max-w-4xl mx-auto px-3 sm:px-4 pt-3 sm:pt-5">
       
-      <!-- ================= 顶部游戏状态栏 ================= -->
+      <!-- ================= 顶部游戏状态栏 (含家长审核锁与语音开关) ================= -->
       <header class="pb-3 border-b" :class="isBrayden ? 'border-indigo-200/70' : 'border-amber-200/80'">
         <div class="flex items-center justify-between gap-1.5">
           <div class="flex items-center gap-1.5 min-w-0">
@@ -95,17 +95,27 @@
           </div>
 
           <div class="flex items-center gap-1.5 flex-shrink-0">
-            <!-- 语音夸奖开关 (儿童多感官激励核心) -->
+            <!-- 家长模式审核锁开关 -->
+            <button @click="toggleParentMode" 
+                    :class="parentUnlocked ? 'bg-amber-500 text-white border-amber-700' : 'bg-white text-slate-700 border-slate-300'"
+                    class="text-[11px] font-extrabold px-2.5 py-1 rounded-full border-b-2 flex items-center gap-1 transition active:translate-y-0.5 whitespace-nowrap shadow-2xs">
+              <span>{{ parentUnlocked ? '🔓 家长审核中' : '🔒 家长锁' }}</span>
+              <span v-if="!parentUnlocked && pendingAuditCount > 0" class="bg-rose-500 text-white text-[9px] px-1.5 rounded-full">
+                {{ pendingAuditCount }}
+              </span>
+            </button>
+
+            <!-- 语音夸奖开关 -->
             <button @click="toggleVoice" 
                     :class="voiceEnabled ? 'bg-emerald-500 text-white border-emerald-700' : 'bg-white text-slate-500 border-slate-300'"
-                    class="text-[11px] font-extrabold px-2.5 py-1 rounded-full border-b-2 flex items-center gap-1 transition active:translate-y-0.5 whitespace-nowrap shadow-2xs">
-              <span>{{ voiceEnabled ? '🔊 语音夸奖' : '🔇 静音' }}</span>
+                    class="text-[11px] font-extrabold px-2 py-1 rounded-full border-b-2 flex items-center gap-1 transition active:translate-y-0.5 whitespace-nowrap shadow-2xs">
+              <span>{{ voiceEnabled ? '🔊 语音' : '🔇 静音' }}</span>
             </button>
 
             <!-- 版本日志按钮 -->
             <button @click="showChangelogModal = true" 
-                    class="text-[11px] bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 border-b-2 font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1 transition active:translate-y-0.5 whitespace-nowrap shadow-2xs">
-              <span>v2.0.0</span>
+                    class="text-[11px] bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 border-b-2 font-extrabold px-2 py-1 rounded-full flex items-center gap-0.5 transition active:translate-y-0.5 whitespace-nowrap shadow-2xs">
+              <span>v2.1.0</span>
               <span>📜</span>
             </button>
           </div>
@@ -120,8 +130,8 @@
             <span class="bg-emerald-500/15 text-emerald-800 font-extrabold px-2 py-0.5 rounded-lg border border-emerald-300/60">
               🪙 100 PTS = SGD $1.00
             </span>
-            <span class="bg-rose-500/10 text-rose-700 font-bold px-2 py-0.5 rounded-lg border border-rose-200/60">
-              🛡️ 心愿每日限兑 1 次
+            <span class="bg-amber-500/15 text-amber-900 font-bold px-2 py-0.5 rounded-lg border border-amber-300/60">
+              🛡️ 乐观打卡 • 家长定期审核盖章
             </span>
           </div>
         </div>
@@ -203,30 +213,22 @@
                       <stop offset="100%" stop-color="#F57C00"/>
                     </linearGradient>
                   </defs>
-                  <!-- 圆耳朵 -->
                   <circle cx="22" cy="24" r="14" fill="#F57C00"/>
                   <circle cx="22" cy="24" r="8" fill="#FFF3E0"/>
                   <circle cx="78" cy="24" r="14" fill="#F57C00"/>
                   <circle cx="78" cy="24" r="8" fill="#FFF3E0"/>
-                  <!-- 虎头主轮廓 -->
                   <ellipse cx="50" cy="54" rx="38" ry="34" fill="url(#tigerFur)"/>
-                  <!-- 白色脸颊与下巴毛发 -->
                   <path d="M14 56 C14 76, 34 86, 50 86 C66 86, 86 76, 86 56 C82 48, 72 48, 66 54 C60 60, 40 60, 34 54 C28 48, 18 48, 14 56 Z" fill="#FFF8E7"/>
-                  <!-- 额头经典“王”字纹 -->
                   <path d="M40 26 L60 26 M42 32 L58 32 M45 38 L55 38 M50 23 L50 40" stroke="#3E2723" stroke-width="3.5" stroke-linecap="round"/>
-                  <!-- 脸颊虎斑纹 -->
                   <path d="M14 48 L22 50 M13 55 L21 56 M86 48 L78 50 M87 55 L79 56" stroke="#3E2723" stroke-width="3" stroke-linecap="round"/>
-                  <!-- 灵动大眼睛 -->
                   <circle cx="34" cy="48" r="8.5" fill="#212121"/>
                   <circle cx="66" cy="48" r="8.5" fill="#212121"/>
                   <circle cx="32" cy="45.5" r="3" fill="#FFFFFF"/>
                   <circle cx="64" cy="45.5" r="3" fill="#FFFFFF"/>
                   <circle cx="36" cy="50.5" r="1.4" fill="#FFFFFF"/>
                   <circle cx="68" cy="50.5" r="1.4" fill="#FFFFFF"/>
-                  <!-- 粉红腮红 -->
                   <ellipse cx="24" cy="58" rx="5.5" ry="3.2" fill="#FF8A80" opacity="0.65"/>
                   <ellipse cx="76" cy="58" rx="5.5" ry="3.2" fill="#FF8A80" opacity="0.65"/>
-                  <!-- 嘴部与粉色小鼻子 -->
                   <ellipse cx="50" cy="59" rx="11" ry="8" fill="#FFFFFF"/>
                   <path d="M45 54 C47 52, 53 52, 55 54 L50 60 Z" fill="#FF7043"/>
                   <path d="M50 60 L50 64 M50 64 C46 67, 42 65, 42 62 M50 64 C54 67, 58 65, 58 62" stroke="#3E2723" stroke-width="2.5" stroke-linecap="round" fill="none"/>
@@ -289,7 +291,6 @@
                    mascotJumping ? 'mascot-jump' : 'mascot-idle',
                    isBrayden ? 'bg-gradient-to-b from-sky-100 to-indigo-100 border-indigo-300' : 'bg-gradient-to-b from-amber-100 to-orange-100 border-amber-300'
                  ]">
-              <!-- 复用高精猫头鹰/小老虎 -->
               <svg v-if="isBrayden" viewBox="0 0 100 100" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                 <ellipse cx="50" cy="62" rx="36" ry="32" fill="#5D4037"/>
                 <ellipse cx="50" cy="69" rx="25" ry="23" fill="#FFFDF7"/>
@@ -341,17 +342,14 @@
               <span class="bg-amber-200/80 text-amber-950 px-1.5 py-0.2 rounded-full text-[10px]">{{ todayTaskTotal }}/5</span>
             </div>
             <div class="flex items-center gap-2 mt-0.5 sm:mt-1.5">
-              <!-- 第 1 颗星 (完成 1 项) -->
               <div class="flex flex-col items-center">
                 <span class="text-xl sm:text-2xl transition-transform" :class="todayTaskTotal >= 1 ? 'star-lit drop-shadow-xs' : 'grayscale opacity-30'">⭐</span>
                 <span class="text-[9px] font-bold" :class="todayTaskTotal >= 1 ? 'text-amber-700' : 'text-slate-400'">1项启航</span>
               </div>
-              <!-- 第 2 颗星 (完成 3 项) -->
               <div class="flex flex-col items-center">
                 <span class="text-xl sm:text-2xl transition-transform" :class="todayTaskTotal >= 3 ? 'star-lit drop-shadow-xs' : 'grayscale opacity-30'">⭐</span>
                 <span class="text-[9px] font-bold" :class="todayTaskTotal >= 3 ? 'text-amber-700' : 'text-slate-400'">3项进阶</span>
               </div>
-              <!-- 第 3 颗星 (完成 5 项大满贯) -->
               <div class="flex flex-col items-center">
                 <span class="text-xl sm:text-2xl transition-transform" :class="todayTaskTotal >= 5 ? 'star-lit drop-shadow-xs' : 'grayscale opacity-30'">🌟</span>
                 <span class="text-[9px] font-bold" :class="todayTaskTotal >= 5 ? 'text-amber-700' : 'text-slate-400'">5项满贯</span>
@@ -360,7 +358,7 @@
           </div>
         </div>
 
-        <!-- ================= 奇幻寻宝冒险路线图 (替代枯燥进度条) ================= -->
+        <!-- ================= 奇幻寻宝冒险路线图 ================= -->
         <div class="mt-3.5 pt-3 border-t border-slate-100">
           <div class="flex flex-wrap items-center justify-between gap-1.5 text-xs font-extrabold text-slate-700 mb-2">
             <span class="flex items-center gap-1">
@@ -373,9 +371,7 @@
             </span>
           </div>
 
-          <!-- 4 站式分段寻宝轨道 (30 -> 200 -> 1000 -> 5000) -->
           <div class="relative pt-6 pb-2 px-2">
-            <!-- 轨道底槽 -->
             <div class="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/80 shadow-inner">
               <div class="h-full rounded-full transition-all duration-700 relative"
                    :class="isBrayden ? 'bg-gradient-to-r from-sky-400 via-indigo-500 to-violet-600' : 'bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500'"
@@ -383,7 +379,6 @@
               </div>
             </div>
 
-            <!-- 在轨道上奔跑的当前萌宠浮标 -->
             <div class="absolute top-0 -translate-x-1/2 transition-all duration-700 z-10 flex flex-col items-center"
                  :style="{ left: `calc(${Math.min(96, Math.max(4, adventureTrackPercent))}% )` }">
               <div class="px-1.5 py-0.5 rounded-full text-[10px] font-black text-white shadow-md whitespace-nowrap flex items-center gap-0.5"
@@ -395,7 +390,6 @@
                    :class="isBrayden ? 'border-t-indigo-600' : 'border-t-orange-500'"></div>
             </div>
 
-            <!-- 4 座宝藏岛节点 -->
             <div class="grid grid-cols-4 gap-1 mt-2 text-center">
               <div v-for="m in wishItems" :key="m.id" 
                    @click="activeTab = 'shop'"
@@ -415,7 +409,6 @@
             </div>
           </div>
 
-          <!-- 保留家长关注的两大超级心愿精确百分比微标 -->
           <div class="mt-1.5 flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-100">
             <span>🌊 水上乐园: <strong class="text-sky-700">{{ currentChild.currentPoints }}/1000 ({{ calcPercent(currentChild.currentPoints, 1000) }}%)</strong></span>
             <span>✈️ 出国旅游: <strong class="text-amber-700">{{ currentChild.currentPoints }}/5000 ({{ calcPercent(currentChild.currentPoints, 5000) }}%)</strong></span>
@@ -423,7 +416,7 @@
         </div>
       </section>
 
-      <!-- ================= 游戏化三舱导航栏 (消除长页面信息过载) ================= -->
+      <!-- ================= 游戏化三舱导航栏 ================= -->
       <nav class="mt-4 grid grid-cols-3 gap-2">
         <button @click="activeTab = 'quests'"
                 :class="activeTab === 'quests' 
@@ -451,13 +444,126 @@
                   ? 'bg-amber-500 text-white border-amber-700 shadow-md' 
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
                 class="toy-card py-2.5 px-1.5 rounded-2xl border-2 border-b-4 font-black text-xs sm:text-sm flex items-center justify-center gap-1 relative whitespace-nowrap">
-          <span class="text-base sm:text-lg">🎟️</span>
-          <span>奖券账本</span>
-          <span v-if="unusedTicketCount > 0" class="absolute -top-2 -right-1 bg-indigo-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-xs">
+          <span class="text-base sm:text-lg">🛡️</span>
+          <span>审核与奖券</span>
+          <span v-if="pendingAuditCount > 0" class="absolute -top-2 -right-1 bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-xs">
+            {{ pendingAuditCount }}待审
+          </span>
+          <span v-else-if="unusedTicketCount > 0" class="absolute -top-2 -right-1 bg-indigo-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-xs">
             {{ unusedTicketCount }}券
           </span>
         </button>
       </nav>
+
+      <!-- ================= 📡 主界面零干扰「今日打卡透视条 + 快捷审核抽屉」 ================= -->
+      <section class="mt-3 bg-white/95 rounded-2xl border-2 shadow-2xs overflow-hidden transition-all"
+               :class="pendingAuditCount > 0 ? 'border-amber-300' : 'border-slate-200'">
+        <!-- 常驻单行胶囊条 (不占视野，一眼看清刚刚打了什么卡) -->
+        <div @click="showQuickAuditDrawer = !showQuickAuditDrawer"
+             class="px-3 py-2 flex items-center justify-between gap-2 cursor-pointer hover:bg-slate-50/80 transition">
+          <div class="flex items-center gap-1.5 min-w-0 flex-1 text-xs">
+            <span class="text-base flex-shrink-0">📋</span>
+            <span class="font-black text-slate-700 flex-shrink-0">今日打卡动态:</span>
+            <span v-if="todayTransactions.length === 0" class="text-slate-400 truncate">
+              今日暂无记录，点击下方任务卡开始闯关吧！
+            </span>
+            <span v-else class="text-slate-700 font-bold truncate">
+              最近: {{ getChildName(todayTransactions[0].childId) }} {{ todayTransactions[0].taskKey || todayTransactions[0].reason }}
+              <strong class="text-emerald-600">({{ todayTransactions[0].pointsChange > 0 ? '+' : '' }}{{ todayTransactions[0].pointsChange }}分)</strong>
+            </span>
+          </div>
+
+          <div class="flex items-center gap-1.5 flex-shrink-0">
+            <span v-if="pendingAuditCount > 0" class="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded-full whitespace-nowrap">
+              ⏳ {{ pendingAuditCount }}笔待审
+            </span>
+            <span v-else-if="todayTransactions.length > 0" class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full whitespace-nowrap">
+              🛡️ 今日已全审
+            </span>
+            <span class="text-[11px] font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg whitespace-nowrap">
+              {{ showQuickAuditDrawer ? '收起 ▴' : `明细(${todayTransactions.length}) ▾` }}
+            </span>
+          </div>
+        </div>
+
+        <!-- 点击展开的「今日打卡快速审核抽屉」 (无需跳离主界面即可直接核准/驳回) -->
+        <div v-if="showQuickAuditDrawer" class="border-t border-slate-100 bg-slate-50/70 p-3 space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
+              <span>🔍 今日实时打卡日志（共 {{ todayTransactions.length }} 笔）</span>
+              <span v-if="duplicateTxCountToday > 0" class="bg-rose-100 text-rose-700 font-black px-1.5 py-0.2 rounded text-[10px]">
+                ⚠️ 发现 {{ duplicateTxCountToday }} 笔同日重复打卡
+              </span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button v-if="pendingAuditCount > 0"
+                      @click.stop="approveAllPending"
+                      class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[11px] rounded-xl shadow-2xs transition active:scale-95">
+                ✅ 家长一键核准全部 ({{ pendingAuditCount }})
+              </button>
+              <button @click.stop="activeTab = 'wallet'; showQuickAuditDrawer = false"
+                      class="px-2.5 py-1 bg-white border border-slate-200 text-slate-600 font-bold text-[11px] rounded-xl hover:bg-slate-100">
+                完整账本 ➔
+              </button>
+            </div>
+          </div>
+
+          <div v-if="todayTransactions.length === 0" class="text-center py-4 text-xs text-slate-400">
+            今天还没有打卡记录哦～
+          </div>
+
+          <div v-else class="max-h-60 overflow-y-auto divide-y divide-slate-200/70 bg-white rounded-xl border border-slate-200/80">
+            <div v-for="tx in todayTransactions" :key="tx.id"
+                 class="p-2.5 flex items-center justify-between gap-2 text-xs"
+                 :class="tx.auditStatus === 'rejected' ? 'opacity-45 bg-slate-100 line-through' : ''">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-base flex-shrink-0">{{ tx.icon || (tx.type === 'earn' ? '🌟' : '🎁') }}</span>
+                <div class="min-w-0">
+                  <div class="font-bold text-slate-800 flex flex-wrap items-center gap-1">
+                    <span>{{ getChildName(tx.childId) }}</span>
+                    <span class="text-slate-700">{{ tx.reason }}</span>
+                    <!-- 同日重复打卡预警标签 -->
+                    <span v-if="tx.dailySeq && tx.dailySeq > 1" class="bg-orange-100 text-orange-800 text-[9px] font-black px-1.5 py-0.2 rounded-full">
+                      ⚠️ 今日第{{ tx.dailySeq }}次
+                    </span>
+                    <!-- 审核状态徽章 -->
+                    <span v-if="tx.auditStatus === 'approved'" class="bg-emerald-100 text-emerald-800 text-[9px] font-black px-1.5 py-0.2 rounded-full">
+                      🛡️家长已核准
+                    </span>
+                    <span v-else-if="tx.auditStatus === 'pending'" class="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.2 rounded-full">
+                      ⏳待审核
+                    </span>
+                    <span v-else-if="tx.auditStatus === 'rejected'" class="bg-rose-100 text-rose-700 text-[9px] font-black px-1.5 py-0.2 rounded-full">
+                      🚫已驳回扣回
+                    </span>
+                  </div>
+                  <div class="text-[10px] text-slate-400">{{ tx.timestamp }}</div>
+                </div>
+              </div>
+
+              <!-- 右侧：分值 + 单笔核准/驳回操作 -->
+              <div class="flex items-center gap-1.5 flex-shrink-0">
+                <span class="font-black text-xs" :class="tx.pointsChange > 0 ? 'text-emerald-600' : 'text-purple-600'">
+                  {{ tx.pointsChange > 0 ? '+' : '' }}{{ tx.pointsChange }}分
+                </span>
+                <template v-if="tx.auditStatus !== 'rejected'">
+                  <button v-if="tx.auditStatus === 'pending'"
+                          @click.stop="approveSingleTx(tx)"
+                          title="家长盖章确认"
+                          class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-[10px] rounded-lg border border-emerald-200">
+                    ✅核准
+                  </button>
+                  <button @click.stop="rejectTransaction(tx)"
+                          title="乱点驳回并扣回积分"
+                          class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-black text-[10px] rounded-lg border border-rose-200">
+                    ❌驳回
+                  </button>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- ========================================================================= -->
       <!-- 舱位 1：🏰 今日闯关 (3D 果冻积木按键 + 大图标闪卡 + 今日已点亮印章)          -->
@@ -486,7 +592,7 @@
                   <div class="min-w-0">
                     <div class="font-black text-xs sm:text-sm text-slate-800 truncate flex items-center gap-1">
                       <span>KooBits Math</span>
-                      <span v-if="getTaskDoneCount('KooBits Math') > 0" class="text-[10px] bg-emerald-500 text-white px-1.5 py-0.2 rounded-full">✅已打卡</span>
+                      <span v-if="getTaskDoneCount('KooBits Math') > 0" class="text-[10px] bg-emerald-500 text-white px-1.5 py-0.2 rounded-full">✅x{{ getTaskDoneCount('KooBits Math') }}</span>
                     </div>
                     <div class="text-[10px] text-slate-500">输入今日 CP 挑战分</div>
                   </div>
@@ -508,7 +614,7 @@
                   <div class="min-w-0">
                     <div class="font-black text-xs sm:text-sm text-slate-800 truncate flex items-center gap-1">
                       <span>KooBits Chinese</span>
-                      <span v-if="getTaskDoneCount('KooBits Chinese') > 0" class="text-[10px] bg-emerald-500 text-white px-1.5 py-0.2 rounded-full">✅已打卡</span>
+                      <span v-if="getTaskDoneCount('KooBits Chinese') > 0" class="text-[10px] bg-emerald-500 text-white px-1.5 py-0.2 rounded-full">✅x{{ getTaskDoneCount('KooBits Chinese') }}</span>
                     </div>
                     <div class="text-[10px] text-slate-500">输入今日 CP 挑战分</div>
                   </div>
@@ -524,7 +630,7 @@
             </div>
           </div>
 
-          <!-- 分组 2: 学业功课与钢琴艺术 (大图标 3D 卡片) -->
+          <!-- 分组 2: 学业功课与钢琴艺术 -->
           <div>
             <div class="flex items-center justify-between mb-2">
               <h3 class="text-xs font-black text-indigo-950 flex items-center gap-1">
@@ -539,7 +645,6 @@
                         ? 'bg-gradient-to-b from-emerald-50 to-teal-50/80 border-emerald-400 border-b-emerald-600' 
                         : 'bg-white border-indigo-100 border-b-indigo-300 hover:border-indigo-300'"
                       class="toy-card p-3 rounded-2xl border-2 border-b-4 text-left flex flex-col justify-between relative overflow-hidden shadow-2xs">
-                <!-- 今日已达成印章 -->
                 <span v-if="getTaskDoneCount(t.name) > 0" class="absolute top-2 right-2 bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-2xs">
                   ✅ x{{ getTaskDoneCount(t.name) }}
                 </span>
@@ -558,7 +663,7 @@
             </div>
           </div>
 
-          <!-- 分组 3: 榜样兄长勋章 (教导与陪伴弟弟 Kayden) -->
+          <!-- 分组 3: 榜样兄长勋章 -->
           <div class="bg-gradient-to-br from-amber-50/90 to-orange-50/70 border-2 border-amber-200 rounded-3xl p-3.5 shadow-2xs">
             <h3 class="text-xs sm:text-sm font-black text-amber-950 mb-2.5 flex items-center gap-1.5">
               <span class="text-lg">👨‍🏫</span> 榜样兄长勋章（陪伴与教导弟弟安安）
@@ -585,7 +690,7 @@
             </div>
           </div>
 
-          <!-- 分组 4: 健健的日常生活自律好习惯 (手机端 2 列 / 平板 5 列，绝不横向溢出) -->
+          <!-- 分组 4: 健健的日常生活自律好习惯 -->
           <div>
             <h3 class="text-xs font-black text-indigo-950 mb-2 flex items-center gap-1">
               <span>🌟</span> 每日健康与生活自律
@@ -612,10 +717,8 @@
           </div>
         </section>
 
-        <!-- >>>>>>>> 专属打卡区域 B：Kayden (安安 🐯 - 绘本大图标闪卡设计，不识字也能自己点) <<<<<<<< -->
+        <!-- >>>>>>>> 专属打卡区域 B：Kayden (安安 🐯 - 大绘本图标闪卡) <<<<<<<< -->
         <section v-else class="space-y-4">
-          
-          <!-- 分组 1: 绘本阅读与开口表达 -->
           <div class="bg-gradient-to-br from-amber-50 to-orange-50/80 border-2 border-amber-200 rounded-3xl p-3.5 shadow-2xs">
             <h3 class="text-xs sm:text-sm font-black text-amber-950 mb-2.5 flex items-center gap-1.5">
               <span class="text-lg">📖</span> 英文绘本与开口大声说
@@ -640,7 +743,6 @@
             </div>
           </div>
 
-          <!-- 分组 2: 数字、字母、单词与汉字书写闪卡 -->
           <div>
             <h3 class="text-xs sm:text-sm font-black text-amber-950 mb-2.5 flex items-center gap-1.5">
               <span class="text-lg">✍️</span> 聪明小手：写数字 • 字母 • 单词 • 汉字
@@ -664,7 +766,6 @@
             </div>
           </div>
 
-          <!-- 分组 3: 安安的收纳与健康好习惯 (大绘本图标闪卡) -->
           <div>
             <h3 class="text-xs sm:text-sm font-black text-amber-950 mb-2.5 flex items-center gap-1.5">
               <span class="text-lg">🧸</span> 乖巧自理小达人（收玩具 • 吃饭 • 洗澡 • 刷牙 • 蔬果）
@@ -732,7 +833,6 @@
               ? 'border-slate-200 border-b-slate-300 opacity-70 bg-slate-50' 
               : (currentChild.currentPoints >= wish.points ? 'border-emerald-400 border-b-emerald-600 shadow-sm' : 'border-slate-200 border-b-slate-300')"
           >
-            <!-- 右上角状态角标 -->
             <div v-if="isRedeemedToday(wish.id)" class="absolute top-3 right-3 bg-slate-200 text-slate-600 text-[10px] font-black px-2.5 py-0.5 rounded-full">
               🔒 今日已兑
             </div>
@@ -758,7 +858,6 @@
                 </div>
               </div>
 
-              <!-- 距离该目标的迷你进度条 -->
               <div class="mt-3">
                 <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div class="h-full rounded-full transition-all duration-500"
@@ -768,7 +867,6 @@
               </div>
             </div>
 
-            <!-- 兑换按钮 -->
             <div class="mt-3.5">
               <button 
                 v-if="isRedeemedToday(wish.id)" 
@@ -799,11 +897,150 @@
       </div>
 
       <!-- ========================================================================= -->
-      <!-- 舱位 3：🎟️ 奖券包与荣誉账本 (金色心愿实体奖券 + 历史流水与撤销)            -->
+      <!-- 舱位 3：🛡️ 家长定期审核中心 + 金色奖券包                                    -->
       <!-- ========================================================================= -->
       <div v-show="activeTab === 'wallet'" class="mt-4 space-y-5">
         
-        <!-- 1. 金色心愿兑换券背包 (Tangible Golden Ticket Wallet) -->
+        <!-- 1. 家长定期审核控制台 (Parent Audit Dashboard) -->
+        <section class="bg-white rounded-3xl p-4 border-2 shadow-xs"
+                 :class="pendingAuditCount > 0 ? 'border-amber-300' : 'border-emerald-200'">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-base sm:text-lg font-black text-slate-800 flex items-center gap-1.5">
+                  <span>🛡️</span> 家长定期审核中心 & 荣誉账本
+                </h2>
+                <span class="text-[10px] font-black px-2 py-0.5 rounded-full"
+                      :class="parentUnlocked ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'">
+                  {{ parentUnlocked ? '🔓 已解锁家长权限' : '🔒 审核操作需验证 PIN (默认 8888)' }}
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5">
+                孩子平时可自主打卡获得即时鼓励；家长可定期在此一键批量核准，或对胡乱打卡的单笔记录点「❌驳回扣回」。
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <button v-if="pendingAuditCount > 0"
+                      @click="approveAllPending"
+                      class="toy-card px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl border-b-4 border-emerald-800 shadow-sm whitespace-nowrap">
+                ✅ 一键核准全部待审 ({{ pendingAuditCount }}笔)
+              </button>
+              <span v-else class="px-3 py-1.5 bg-emerald-50 text-emerald-700 font-black text-xs rounded-2xl border border-emerald-200">
+                🎉 所有记录已全部核准！
+              </span>
+            </div>
+          </div>
+
+          <!-- 今日双人打卡概览统计卡 -->
+          <div class="grid grid-cols-3 gap-2 my-3 text-center">
+            <div class="bg-slate-50 rounded-2xl p-2.5 border border-slate-200/70">
+              <div class="text-[10px] text-slate-500 font-bold">今日打卡总笔数</div>
+              <div class="text-lg font-black text-slate-800">{{ todayTransactions.length }} <span class="text-[10px]">笔</span></div>
+            </div>
+            <div class="bg-amber-50/70 rounded-2xl p-2.5 border border-amber-200/70">
+              <div class="text-[10px] text-amber-800 font-bold">⏳ 待家长确认</div>
+              <div class="text-lg font-black text-amber-600">{{ pendingAuditCount }} <span class="text-[10px]">笔</span></div>
+            </div>
+            <div class="bg-rose-50/70 rounded-2xl p-2.5 border border-rose-200/70">
+              <div class="text-[10px] text-rose-800 font-bold">⚠️ 同日重复打卡</div>
+              <div class="text-lg font-black text-rose-600">{{ duplicateTxCountAll }} <span class="text-[10px]">笔</span></div>
+            </div>
+          </div>
+
+          <!-- 多维筛选胶囊栏 -->
+          <div class="flex flex-wrap items-center gap-1.5 mb-3">
+            <button v-for="f in auditFilters" :key="f.key"
+                    @click="ledgerFilter = f.key"
+                    :class="ledgerFilter === f.key ? 'bg-indigo-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold'"
+                    class="text-[11px] px-2.5 py-1 rounded-full transition">
+              {{ f.label }}
+            </button>
+          </div>
+
+          <!-- 审核流水明细列表 (支持任意行独立核准 / 独立驳回扣分) -->
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <div v-if="filteredTransactions.length === 0" class="p-8 text-center text-slate-400 text-xs">
+              当前筛选条件下暂无记录
+            </div>
+            <div v-else class="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+              <div 
+                v-for="tx in filteredTransactions" 
+                :key="tx.id"
+                class="p-3 flex items-center justify-between hover:bg-slate-50 transition text-xs gap-2"
+                :class="tx.auditStatus === 'rejected' ? 'bg-slate-50 opacity-50' : ''"
+              >
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="text-xl flex-shrink-0">
+                    {{ tx.icon || (tx.type === 'earn' ? '🟢' : '🎁') }}
+                  </span>
+                  <div class="min-w-0">
+                    <div class="font-bold text-slate-800 flex flex-wrap items-center gap-1">
+                      <span class="font-black" :class="tx.childId === 'brayden' ? 'text-indigo-700' : 'text-orange-700'">
+                        {{ getChildName(tx.childId) }}
+                      </span>
+                      <span :class="{ 'line-through text-slate-400': tx.auditStatus === 'rejected' }">{{ tx.reason }}</span>
+                      
+                      <!-- 同日重复高频预警徽章 -->
+                      <span v-if="tx.dailySeq && tx.dailySeq > 1" class="bg-orange-100 text-orange-800 text-[9px] font-black px-1.5 py-0.2 rounded-full">
+                        ⚠️ 同日第{{ tx.dailySeq }}次
+                      </span>
+
+                      <!-- 审核状态标签 -->
+                      <span v-if="tx.auditStatus === 'approved'" class="bg-emerald-100 text-emerald-800 text-[9px] font-black px-1.5 py-0.2 rounded-full">
+                        🛡️ 已核准
+                      </span>
+                      <span v-else-if="tx.auditStatus === 'pending'" class="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.2 rounded-full">
+                        ⏳ 待家长审核
+                      </span>
+                      <span v-else-if="tx.auditStatus === 'rejected'" class="bg-rose-100 text-rose-700 text-[9px] font-black px-1.5 py-0.2 rounded-full">
+                        🚫 已驳回并扣回积分
+                      </span>
+                    </div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">
+                      📅 {{ tx.dateKey || '2026-10-29' }} • 🕒 {{ tx.timestamp }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 右侧分值与任意行审核操作 -->
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                  <div class="text-right mr-1">
+                    <div 
+                      class="font-black text-xs sm:text-sm"
+                      :class="tx.auditStatus === 'rejected' ? 'text-slate-400 line-through' : (tx.pointsChange > 0 ? 'text-emerald-600' : 'text-purple-600')"
+                    >
+                      {{ tx.pointsChange > 0 ? '+' : '' }}{{ tx.pointsChange }} PTS
+                    </div>
+                    <div class="text-[9px] text-slate-400">
+                      ${{ (Math.abs(tx.pointsChange) * 0.01).toFixed(2) }}
+                    </div>
+                  </div>
+
+                  <template v-if="tx.auditStatus !== 'rejected' && tx.taskKey !== 'init'">
+                    <button 
+                      v-if="tx.auditStatus === 'pending'"
+                      @click="approveSingleTx(tx)" 
+                      title="家长核准通过"
+                      class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-lg border border-emerald-200 transition"
+                    >
+                      ✅核准
+                    </button>
+                    <button 
+                      @click="rejectTransaction(tx)" 
+                      title="驳回该笔记录并自动扣回积分"
+                      class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-black rounded-lg border border-rose-200 transition"
+                    >
+                      ❌驳回
+                    </button>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. 金色心愿兑换券背包 (Tangible Golden Ticket Wallet) -->
         <section class="bg-white rounded-3xl p-4 border-2 border-amber-200 shadow-xs">
           <div class="flex items-center justify-between mb-3">
             <div>
@@ -835,73 +1072,11 @@
               <div class="flex-shrink-0">
                 <button v-if="!tk.used" @click="useTicket(tk)"
                         class="toy-card px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs rounded-xl border-b-2 border-amber-700 shadow-2xs whitespace-nowrap">
-                  ✨ 立即核销使用
+                  ✨ 家长核销使用
                 </button>
                 <span v-else class="px-2.5 py-1 bg-slate-200 text-slate-600 font-black text-[10px] rounded-xl">
                   ✅ 已兑现
                 </span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 2. 积分与心愿历史流水账本 (含一键撤销) -->
-        <section>
-          <div class="flex items-center justify-between mb-2.5">
-            <h2 class="text-base font-black text-slate-800 flex items-center gap-1.5">
-              <span>📜</span> 家庭积分荣誉账本 (最近 30 条)
-            </h2>
-            <span class="text-[10px] text-slate-500 font-bold">支持误触一键撤销</span>
-          </div>
-
-          <div class="bg-white rounded-3xl border-2 border-slate-200 shadow-2xs overflow-hidden">
-            <div v-if="state.transactions.length === 0" class="p-8 text-center text-slate-400 text-xs">
-              暂无打卡或兑换流水记录
-            </div>
-            <div v-else class="divide-y divide-slate-100 max-h-80 overflow-y-auto">
-              <div 
-                v-for="(tx, idx) in state.transactions" 
-                :key="tx.id"
-                class="p-3 flex items-center justify-between hover:bg-slate-50 transition text-xs gap-2"
-              >
-                <div class="flex items-center gap-2 min-w-0">
-                  <span class="text-base flex-shrink-0">
-                    {{ tx.type === 'earn' ? '🟢' : '🎁' }}
-                  </span>
-                  <div class="min-w-0">
-                    <div class="font-bold text-slate-800 flex items-center gap-1.5 truncate">
-                      <span class="truncate">{{ getChildName(tx.childId) }}</span>
-                      <span class="text-slate-600 font-medium truncate">{{ tx.reason }}</span>
-                    </div>
-                    <div class="text-[10px] text-slate-400 mt-0.5">
-                      {{ tx.timestamp }}
-                    </div>
-                  </div>
-                </div>
-
-                <div class="flex items-center gap-2 flex-shrink-0">
-                  <div class="text-right">
-                    <div 
-                      class="font-black text-xs sm:text-sm"
-                      :class="tx.pointsChange > 0 ? 'text-emerald-600' : 'text-purple-600'"
-                    >
-                      {{ tx.pointsChange > 0 ? '+' : '' }}{{ tx.pointsChange }} PTS
-                    </div>
-                    <div class="text-[9px] text-slate-400">
-                      ${{ (Math.abs(tx.pointsChange) * 0.01).toFixed(2) }}
-                    </div>
-                  </div>
-
-                  <!-- 第一项可撤销 -->
-                  <button 
-                    v-if="idx === 0" 
-                    @click="rollbackLastTransaction" 
-                    title="撤销最近一次误触操作"
-                    class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-black rounded-lg border border-rose-200 active:bg-rose-200 transition"
-                  >
-                    ↩️ 撤销
-                  </button>
-                </div>
               </div>
             </div>
           </div>
@@ -914,9 +1089,11 @@
           <div class="flex items-center justify-between mb-2.5 text-xs text-slate-600 font-bold">
             <span class="flex items-center gap-1.5">
               <span>⚙️</span>
-              <span>家庭数据备份与恢复</span>
+              <span>家庭数据备份与家长密码设置</span>
             </span>
-            <span class="text-[10px] text-slate-400 font-normal">v2.0.0 游戏化闯关冒险版</span>
+            <button @click="changeParentPin" class="text-[11px] text-indigo-600 font-extrabold underline">
+              🔑 修改家长PIN码
+            </button>
           </div>
           
           <div class="flex items-center gap-2">
@@ -932,10 +1109,28 @@
             </button>
           </div>
           <p class="text-[10px] text-slate-400 text-center mt-2.5">
-            💡 习惯养成积分大冒险 • 1 PTS = SGD $0.01 • 自动无缝兼容历史积分底账
+            💡 习惯养成积分大冒险 v2.1.0 • 默认家长审核 PIN 码为 <strong>8888</strong> • 自动兼容历史积分底账
           </p>
         </div>
       </footer>
+
+      <!-- ================= 弹窗 0: 家长 PIN 码验证弹窗 ================= -->
+      <div v-if="showPinModal" class="fixed inset-0 bg-black/55 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-xs w-full p-5 shadow-2xl border-2 border-amber-300 text-center">
+          <div class="text-4xl mb-2">🛡️</div>
+          <h3 class="font-black text-slate-800 text-base">家长身份验证</h3>
+          <p class="text-xs text-slate-500 mt-1 mb-3">
+            请输入 4 位家长审核 PIN 码以执行核准、驳回或奖券核销（初始默认密码：<strong class="text-indigo-600">8888</strong>）
+          </p>
+          <input type="password" v-model="pinInput" maxlength="4" placeholder="••••"
+                 @keyup.enter="confirmPinModal"
+                 class="w-36 text-center text-2xl font-black tracking-widest py-2 border-2 border-indigo-200 rounded-2xl bg-slate-50 focus:bg-white focus:border-indigo-500 outline-none">
+          <div class="flex gap-2 mt-4">
+            <button @click="cancelPinModal" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-xs rounded-xl">取消</button>
+            <button @click="confirmPinModal" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-xs">解锁验证</button>
+          </div>
+        </div>
+      </div>
 
       <!-- ================= 弹窗 1: 音赛成就奖励弹窗 ================= -->
       <div v-if="showCompetitionModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
@@ -1010,40 +1205,39 @@
           </div>
 
           <div class="mt-3 overflow-y-auto space-y-3.5 pr-1 text-xs text-slate-600">
-            <!-- v2.0.0 -->
-            <div class="p-3.5 bg-gradient-to-br from-indigo-50 to-amber-50/70 border-2 border-indigo-200 rounded-2xl">
+            <!-- v2.1.0 -->
+            <div class="p-3.5 bg-gradient-to-br from-amber-50 to-emerald-50/70 border-2 border-amber-300 rounded-2xl">
               <div class="flex items-center justify-between mb-1.5">
-                <span class="font-black text-indigo-700 text-xs sm:text-sm">🚀 v2.0.0 儿童游戏化闯关冒险版 (当前最新版)</span>
+                <span class="font-black text-amber-900 text-xs sm:text-sm">🛡️ v2.1.0 诚实契约与家长定期审核版 (当前最新版)</span>
                 <span class="text-[10px] text-slate-500 font-bold">2026-10-29</span>
               </div>
               <ul class="list-disc pl-4 space-y-1 text-slate-700 text-[11px]">
-                <li><strong>🕹️ 3D 糖果立体按键 + 今日通关印章</strong>：全面采用多邻国级立体厚底积木卡片与大尺寸绘本闪卡图标（让不识字的弟弟安安也能看图点按），当天打卡后自动点亮翡翠绿并盖上 <code>✅ x1</code> 通关印章。</li>
-                <li><strong>🗣️ 会说话的萌宠剧场 + 真人感语音表扬</strong>：猫头鹰 🦉 与全新高精矢量小老虎 🐯 动态互动气泡，内置浏览器原生中文语音合成（TTS），每次打卡自动大声夸奖孩子（支持一键静音）。</li>
-                <li><strong>⭐⭐⭐ 每日能量三星槽 + 段位头衔</strong>：每天完成 1/3/5 项任务依次点亮三颗能量星，集齐三星触发全屏大满贯礼花；新增专属段位头衔升级体系。</li>
-                <li><strong>🗺️ 奇幻寻宝冒险地图</strong>：将抽象进度条升级为 4 岛屿分段式寻宝路线图，猫头鹰/小老虎头像直接在轨道上奔跑并提示下一站距离。</li>
-                <li><strong>🎨 兄弟双主题世界观 + 三舱导航 + 金色奖券包</strong>：哥哥切换「魔法星空蓝」、弟弟切换「丛林暖阳橙」；分设【🏰今日闯关 / 🎁宝藏商城 / 🎟️奖券与账本】三舱，兑换心愿自动签发可核销的金色心愿兑换券。</li>
+                <li><strong>📡 主界面零干扰「今日打卡透视条 + 快捷审核抽屉」</strong>：主屏常驻单行实时打卡胶囊条，一眼看清刚刚加了什么分；点击即可原地展开今日明细抽屉，完全不破坏游戏闯关体验。</li>
+                <li><strong>🛡️ 「乐观打卡 + 家长定期批量审核」双态机制</strong>：孩子自主打卡即时获得音效、语音夸奖与积分，账单标记为 <code>⏳待审核</code>；家长晚间可一键 <code>✅全部核准</code>，或对任意一笔胡乱打卡点击 <code>❌驳回扣回</code>（打破仅能撤销最后一条的限制）。</li>
+                <li><strong>⚠️ 防连击冷却 + 同日重复打卡自动标黄预警</strong>：内置 1.5 秒防狂点节流锁；同一任务当天打卡 ≥2 次自动标记 <code>⚠️今日第N次</code>，方便家长精准识别重复加分。</li>
+                <li><strong>🔒 家长 PIN 码保护锁 (默认 8888)</strong>：防止孩子自己点“核准”、“驳回”或私自核销心愿奖券；兑换心愿若含未审核积分需家长确认后自动放行。</li>
               </ul>
             </div>
 
-            <!-- v1.2.5 -->
-            <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-extrabold text-slate-700 text-xs sm:text-sm">v1.2.5</span>
-                <span class="text-[10px] text-slate-400">2026-10-29</span>
+            <!-- v2.0.0 -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="font-black text-indigo-700 text-xs sm:text-sm">🚀 v2.0.0 儿童游戏化闯关冒险版</span>
+                <span class="text-[10px] text-slate-500 font-bold">2026-10-29</span>
               </div>
               <ul class="list-disc pl-4 space-y-1 text-slate-600 text-[11px]">
-                <li>插画同款大眼猫头鹰矢量重绘；KooBits Math 与 Chinese 默认分值调优为 26 分。</li>
+                <li>3D 糖果立体按键 + 今日通关印章；会说话的萌宠剧场 + 真人感语音表扬（TTS）；每日能量三星槽 + 段位头衔；4 岛屿奇幻寻宝地图；兄弟双主题皮肤与金色心愿兑换券背包。</li>
               </ul>
             </div>
 
-            <!-- v1.2.0 ~ v1.0.0 -->
+            <!-- v1.0.0 ~ v1.2.5 -->
             <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
               <div class="flex items-center justify-between mb-1">
-                <span class="font-bold text-slate-700">v1.0.0 ~ v1.2.4</span>
+                <span class="font-bold text-slate-700">v1.0.0 ~ v1.2.5</span>
                 <span class="text-[10px] text-slate-400">2026-10-29</span>
               </div>
               <ul class="list-disc pl-4 space-y-0.5 text-slate-500 text-[11px]">
-                <li>确立 <code>1 PTS = SGD $0.01</code> 纯积分体系，双人专属任务面板定制，部署上线 Cloudflare Workers。</li>
+                <li>确立 <code>1 PTS = SGD $0.01</code> 纯积分体系，精绘高精矢量大眼猫头鹰，KooBits 默认 26 CP，部署上线 Cloudflare Workers。</li>
               </ul>
             </div>
           </div>
@@ -1079,8 +1273,8 @@
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(587.33, now); // D5
-          osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.18); // D6
+          osc.frequency.setValueAtTime(587.33, now);
+          osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.18);
           gain.gain.setValueAtTime(0.3, now);
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
           osc.connect(gain);
@@ -1089,11 +1283,29 @@
           osc.stop(now + 0.28);
         } catch(e) {}
       },
+      playRejectSound() {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.linearRampToValueAtTime(180, now + 0.22);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } catch(e) {}
+      },
       playStarFanfare() {
         try {
           this.init();
           if (!this.ctx) return;
-          const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // C5 E5 G5 C6 E6
+          const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
           notes.forEach((freq, idx) => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
@@ -1115,7 +1327,7 @@
           const utter = new SpeechSynthesisUtterance(text);
           utter.lang = 'zh-CN';
           utter.rate = 1.05;
-          utter.pitch = 1.15; // 活泼亲切的儿童陪伴语调
+          utter.pitch = 1.15;
           window.speechSynthesis.speak(utter);
         } catch(e) {}
       }
@@ -1124,7 +1336,8 @@
     const STORAGE_KEY = "HABIT_POINTS_DATA_v1_2_2";
 
     const DEFAULT_DATA = {
-      version: "2.0.0",
+      version: "2.1.0",
+      parentPin: "8888",
       activeChildId: "brayden",
       children: [
         {
@@ -1153,20 +1366,24 @@
       transactions: [
         {
           id: "init_brayden",
-          timestamp: "2026-10-29 08:00",
+          dateKey: "2026-10-29",
+          timestamp: "10-29 08:00",
           childId: "brayden",
           type: "earn",
           pointsChange: 148,
           taskKey: "init",
+          auditStatus: "approved",
           reason: "初始底账同步 (含历史 $20.00)"
         },
         {
           id: "init_kayden",
-          timestamp: "2026-10-29 08:00",
+          dateKey: "2026-10-29",
+          timestamp: "10-29 08:00",
           childId: "kayden",
           type: "earn",
           pointsChange: 57,
           taskKey: "init",
+          auditStatus: "approved",
           reason: "初始底账同步 (含历史 $6.70)"
         }
       ]
@@ -1175,8 +1392,20 @@
     createApp({
       setup() {
         const state = ref(JSON.parse(JSON.stringify(DEFAULT_DATA)));
-        const activeTab = ref('quests'); // 'quests' | 'shop' | 'wallet'
+        const activeTab = ref('quests');
         const voiceEnabled = ref(true);
+        const parentUnlocked = ref(false);
+        const showQuickAuditDrawer = ref(false);
+        const ledgerFilter = ref('all'); // 'all' | 'pending' | 'duplicate' | 'brayden' | 'kayden'
+        
+        // PIN Modal state
+        const showPinModal = ref(false);
+        const pinInput = ref('');
+        let pendingPinCallback = null;
+
+        // Anti-spam click cooldown map
+        const lastClickTimeMap = {};
+
         const mascotJumping = ref(false);
         const customMascotSpeech = ref('');
         const floatingToast = ref(null);
@@ -1195,7 +1424,14 @@
           points: 5
         });
 
-        // 哥哥健健的任务配置表
+        const auditFilters = [
+          { key: 'all', label: '📋 全部流水' },
+          { key: 'pending', label: '⏳ 待家长审核' },
+          { key: 'duplicate', label: '⚠️ 同日重复打卡' },
+          { key: 'brayden', label: '🦉 仅看健健' },
+          { key: 'kayden', label: '🐯 仅看安安' }
+        ];
+
         const braydenStudyTasks = [
           { name: '奥数作业', title: '完成奥数作业', sub: '思维挑战闯关', points: 5, icon: '🧠', detail: '高质量独立完成奥数作业' },
           { name: 'New Journey 作业', title: 'New Journey', sub: '英语阅读进阶', points: 5, icon: '📘', detail: '按时完成 New Journey 练习' },
@@ -1218,7 +1454,6 @@
           { name: '吃水果', title: '吃水果', points: 1, icon: '🍎', detail: '按时吃新鲜水果补充维生素' }
         ];
 
-        // 弟弟安安的任务配置表 (大绘本闪卡)
         const kaydenReadingTasks = [
           { name: '读英文绘本', title: '英文绘本读一本', sub: '看图听故事', points: 1, icon: '📖', detail: '认真读完一本英文绘本' },
           { name: '学会说新单词', title: '学会说新单词', sub: '大声开口棒棒哒', points: 2, icon: '🗣️', detail: '学会准确发音并说出新单词' }
@@ -1264,7 +1499,33 @@
 
         const isBrayden = computed(() => currentChild.value.id === 'brayden');
 
-        // 等级头衔系统
+        // 统计与过滤计算属性
+        const todayTransactions = computed(() => {
+          const today = getTodayKey();
+          return state.value.transactions.filter(tx => tx.dateKey === today && tx.taskKey !== 'init');
+        });
+
+        const pendingAuditCount = computed(() => {
+          return state.value.transactions.filter(tx => tx.auditStatus === 'pending').length;
+        });
+
+        const duplicateTxCountToday = computed(() => {
+          return todayTransactions.value.filter(tx => tx.dailySeq && tx.dailySeq > 1 && tx.auditStatus !== 'rejected').length;
+        });
+
+        const duplicateTxCountAll = computed(() => {
+          return state.value.transactions.filter(tx => tx.dailySeq && tx.dailySeq > 1 && tx.auditStatus !== 'rejected').length;
+        });
+
+        const filteredTransactions = computed(() => {
+          const list = state.value.transactions;
+          if (ledgerFilter.value === 'pending') return list.filter(tx => tx.auditStatus === 'pending');
+          if (ledgerFilter.value === 'duplicate') return list.filter(tx => tx.dailySeq && tx.dailySeq > 1);
+          if (ledgerFilter.value === 'brayden') return list.filter(tx => tx.childId === 'brayden');
+          if (ledgerFilter.value === 'kayden') return list.filter(tx => tx.childId === 'kayden');
+          return list;
+        });
+
         const getLevelBadge = (kid) => {
           const pts = kid.currentPoints || 0;
           if (kid.id === 'brayden') {
@@ -1282,7 +1543,6 @@
           }
         };
 
-        // 今日打卡统计与盖章状态
         const getTaskDoneCount = (taskName) => {
           const today = getTodayKey();
           const child = currentChild.value;
@@ -1298,7 +1558,6 @@
 
         const todayTaskTotal = computed(() => getTodayTaskCount(currentChild.value));
 
-        // 分段式奇幻寻宝地图进度 (30 -> 200 -> 1000 -> 5000 映射到 25% / 50% / 75% / 100%，让前中期积分变动清晰可见)
         const adventureTrackPercent = computed(() => {
           const pts = currentChild.value.currentPoints || 0;
           if (pts <= 0) return 2;
@@ -1319,7 +1578,6 @@
           return '🎉 已通关全部超级大奖！';
         });
 
-        // 吉祥物动态鼓励语
         const mascotMessage = computed(() => {
           if (customMascotSpeech.value) return customMascotSpeech.value;
           const kid = currentChild.value;
@@ -1357,6 +1615,7 @@
             try {
               const parsed = JSON.parse(saved);
               if (parsed && parsed.children) {
+                if (!parsed.parentPin) parsed.parentPin = "8888";
                 parsed.children.forEach(c => {
                   if (c.id === 'brayden') {
                     c.avatar = '🦉';
@@ -1371,12 +1630,71 @@
                   if (!c.dailyTasks) c.dailyTasks = {};
                   if (!c.tickets) c.tickets = [];
                 });
+                if (parsed.transactions) {
+                  parsed.transactions.forEach(tx => {
+                    if (!tx.auditStatus) tx.auditStatus = 'approved';
+                    if (!tx.dateKey) tx.dateKey = '2026-10-29';
+                  });
+                }
                 state.value = parsed;
               }
             } catch(e) {
               console.error("Failed to load saved data.", e);
             }
           }
+        };
+
+        // 家长 PIN 码验证守卫
+        const requireParentAuth = (actionCallback) => {
+          if (parentUnlocked.value) {
+            actionCallback();
+            return;
+          }
+          pinInput.value = '';
+          pendingPinCallback = actionCallback;
+          showPinModal.value = true;
+        };
+
+        const confirmPinModal = () => {
+          const targetPin = state.value.parentPin || '8888';
+          if (pinInput.value === targetPin) {
+            parentUnlocked.value = true;
+            showPinModal.value = false;
+            const cb = pendingPinCallback;
+            pendingPinCallback = null;
+            if (cb) cb();
+          } else {
+            alert('❌ 家长 PIN 码不正确！（初始默认密码为 8888）');
+            pinInput.value = '';
+          }
+        };
+
+        const cancelPinModal = () => {
+          showPinModal.value = false;
+          pendingPinCallback = null;
+          pinInput.value = '';
+        };
+
+        const toggleParentMode = () => {
+          if (parentUnlocked.value) {
+            parentUnlocked.value = false;
+            showFloatingReward('🔒', '已切回孩子打卡模式', 0, false);
+          } else {
+            requireParentAuth(() => {
+              showFloatingReward('🔓', '家长审核模式已解锁', 0, false);
+            });
+          }
+        };
+
+        const changeParentPin = () => {
+          requireParentAuth(() => {
+            const newPin = prompt('请输入新的 4 位数字家长 PIN 码：', state.value.parentPin || '8888');
+            if (newPin && newPin.trim().length >= 4) {
+              state.value.parentPin = newPin.trim();
+              saveData();
+              alert(`✅ 家长 PIN 码已更新为：${state.value.parentPin}`);
+            }
+          });
         };
 
         const toggleVoice = () => {
@@ -1400,11 +1718,11 @@
           const cheers = isBrayden.value
             ? [
                 `健健哥哥最聪明啦！现在已经有 ${kid.currentPoints} 分，${nextMilestoneText.value}！`,
-                `猫头鹰为你加油！不管是奥数还是练琴，健健都能做得超棒！`,
+                `猫头鹰为你加油！诚实打卡、认真完成作业的健健最帅气！`,
                 `健健不仅是学习小能手，还是教弟弟安安的好哥哥！`
               ]
             : [
-                `嗷呜～安安宝贝最乖啦！小老虎最喜欢看安安认真吃饭、刷牙和收玩具啦！`,
+                `嗷呜～安安宝贝最乖啦！小老虎最喜欢看安安诚实打卡、认真吃饭和收玩具啦！`,
                 `安安加油！现在已经有 ${kid.currentPoints} 分啦，快去点亮今天的大星星吧！`,
                 `安安的小手真巧，会写数字、写字母还会读绘本，太厉害啦！`
               ];
@@ -1422,7 +1740,7 @@
 
         const getChildName = (childId) => {
           const c = state.value.children.find(k => k.id === childId);
-          return c ? `${c.avatar} ${c.name}` : childId;
+          return c ? `${c.avatar}${c.nickName}` : childId;
         };
 
         const calcPercent = (pts, total) => {
@@ -1449,9 +1767,9 @@
           }
         };
 
-        const showFloatingReward = (icon, text, points) => {
+        const showFloatingReward = (icon, text, points, isWarn = false) => {
           if (toastTimer) clearTimeout(toastTimer);
-          floatingToast.value = { icon, text, points };
+          floatingToast.value = { icon, text, points, isWarn };
           toastTimer = setTimeout(() => {
             floatingToast.value = null;
           }, 1600);
@@ -1468,34 +1786,47 @@
 
         const addEarn = (taskName, points, detail, icon = '🌟') => {
           const child = currentChild.value;
+          const nowMs = Date.now();
+          const cooldownKey = `${child.id}_${taskName}`;
+
+          // 1.5 秒防手滑狂点节流锁
+          if (lastClickTimeMap[cooldownKey] && (nowMs - lastClickTimeMap[cooldownKey] < 1500)) {
+            showFloatingReward('⏳', '刚刚打过卡啦，小手慢一点哦～', 0, true);
+            return;
+          }
+          lastClickTimeMap[cooldownKey] = nowMs;
+
           const prevCount = getTodayTaskCount(child);
           child.currentPoints += points;
 
-          // 记录今日该任务打卡次数（点亮印章与三星槽）
           const today = getTodayKey();
           if (!child.dailyTasks) child.dailyTasks = {};
           if (!child.dailyTasks[today]) child.dailyTasks[today] = {};
           child.dailyTasks[today][taskName] = (child.dailyTasks[today][taskName] || 0) + 1;
+          const currentTaskSeq = child.dailyTasks[today][taskName];
 
           const newCount = getTodayTaskCount(child);
 
           state.value.transactions.unshift({
-            id: 'tx_' + Date.now(),
+            id: 'tx_' + nowMs,
+            dateKey: today,
             timestamp: getTimestamp(),
             childId: child.id,
             type: 'earn',
+            icon: icon,
             taskKey: taskName,
+            dailySeq: currentTaskSeq,
+            auditStatus: parentUnlocked.value ? 'approved' : 'pending',
             pointsChange: points,
             reason: detail ? `${taskName} (${detail})` : taskName
           });
 
-          if (state.value.transactions.length > 50) {
+          if (state.value.transactions.length > 80) {
             state.value.transactions.pop();
           }
 
           showFloatingReward(icon, `${child.nickName}：${taskName}`, points);
 
-          // 判断是否刚好点亮第 1、3、5 颗能量星
           if ((prevCount < 1 && newCount >= 1) || (prevCount < 3 && newCount >= 3) || (prevCount < 5 && newCount >= 5)) {
             SoundAndVoiceEngine.playStarFanfare();
             triggerConfetti(newCount >= 5);
@@ -1537,21 +1868,76 @@
           customEarn.value.points = 5;
         };
 
-        const confirmRedeem = (wish) => {
+        // 家长单笔核准
+        const approveSingleTx = (tx) => {
+          requireParentAuth(() => {
+            tx.auditStatus = 'approved';
+            SoundAndVoiceEngine.playEarnSound();
+            saveData();
+          });
+        };
+
+        // 家长一键批量核准全部待审
+        const approveAllPending = () => {
+          requireParentAuth(() => {
+            let count = 0;
+            state.value.transactions.forEach(tx => {
+              if (tx.auditStatus === 'pending') {
+                tx.auditStatus = 'approved';
+                count++;
+              }
+            });
+            SoundAndVoiceEngine.playStarFanfare();
+            triggerConfetti(true);
+            showFloatingReward('🛡️', `已全部核准 ${count} 笔打卡记录`, 0, false);
+            saveData();
+          });
+        };
+
+        // 家长单笔精准驳回并扣回积分 (支持任意历史行，不限于第 1 行)
+        const rejectTransaction = (tx) => {
+          requireParentAuth(() => {
+            if (tx.auditStatus === 'rejected') return;
+            const confirmed = confirm(`🛡️ 家长审核驳回确认：\n\n确定驳回【${getChildName(tx.childId)}】的「${tx.reason} (${tx.pointsChange > 0 ? '+' : ''}${tx.pointsChange}分)」吗？\n\n• 系统将自动从孩子余额中扣回该笔积分，并扣减今日对应打卡印章次数。`);
+            if (!confirmed) return;
+
+            const child = state.value.children.find(c => c.id === tx.childId);
+            if (child) {
+              child.currentPoints -= tx.pointsChange;
+              if (child.currentPoints < 0) child.currentPoints = 0;
+
+              const dateKey = tx.dateKey || getTodayKey();
+              if (tx.type === 'earn' && tx.taskKey && child.dailyTasks && child.dailyTasks[dateKey]) {
+                if (child.dailyTasks[dateKey][tx.taskKey] > 0) {
+                  child.dailyTasks[dateKey][tx.taskKey] -= 1;
+                }
+              }
+
+              if (tx.type === 'redeem') {
+                if (child.dailyRedemptions && child.dailyRedemptions[dateKey]) {
+                  for (const w of wishItems) {
+                    if (tx.reason.includes(w.title)) {
+                      if (child.dailyRedemptions[dateKey][w.id] > 0) {
+                        child.dailyRedemptions[dateKey][w.id] -= 1;
+                      }
+                    }
+                  }
+                }
+                if (tx.ticketId && child.tickets) {
+                  child.tickets = child.tickets.filter(t => t.id !== tx.ticketId);
+                }
+              }
+            }
+
+            tx.auditStatus = 'rejected';
+            SoundAndVoiceEngine.playRejectSound();
+            showFloatingReward('🚫', `已驳回并扣回 ${tx.pointsChange} 分`, 0, true);
+            saveData();
+          });
+        };
+
+        const executeRedeem = (wish) => {
           const child = currentChild.value;
-          if (isRedeemedToday(wish.id)) {
-            alert(`【每日防沉迷限制】\n\n"${wish.title}" 今天已经兑换过了，每人每天最多兑换一次，请明天再来！`);
-            return;
-          }
-
-          if (child.currentPoints < wish.points) {
-            alert(`当前积分不足，还差 ${wish.points - child.currentPoints} 分！继续加油哦！`);
-            return;
-          }
-
-          const confirmed = confirm(`🎉 确定为 ${child.name} (${child.nickName}) 兑换「${wish.title}」吗？\n\n• 扣除积分：${wish.points} PTS (SGD $${(wish.points * 0.01).toFixed(2)})\n• 兑换后将自动生成一张【🎟️金色心愿奖券】存入奖券包！`);
-          if (!confirmed) return;
-
           child.currentPoints -= wish.points;
 
           const today = getTodayKey();
@@ -1559,7 +1945,6 @@
           if (!child.dailyRedemptions[today]) child.dailyRedemptions[today] = {};
           child.dailyRedemptions[today][wish.id] = (child.dailyRedemptions[today][wish.id] || 0) + 1;
 
-          // 签发实体感金色心愿奖券
           if (!child.tickets) child.tickets = [];
           const ticketId = 'tk_' + Date.now();
           child.tickets.unshift({
@@ -1574,10 +1959,13 @@
 
           state.value.transactions.unshift({
             id: 'tx_' + Date.now(),
+            dateKey: today,
             ticketId: ticketId,
             timestamp: getTimestamp(),
             childId: child.id,
             type: 'redeem',
+            icon: wish.icon,
+            auditStatus: 'approved',
             pointsChange: -wish.points,
             reason: `兑换: ${wish.title}`
           });
@@ -1591,52 +1979,51 @@
           activeTab.value = 'wallet';
         };
 
-        const useTicket = (tk) => {
-          const confirmed = confirm(`✨ 家长核销确认：\n\n现在为 ${currentChild.value.nickName} 兑现并使用「${tk.icon} ${tk.title}」吗？`);
-          if (!confirmed) return;
-          tk.used = true;
-          SoundAndVoiceEngine.playStarFanfare();
-          triggerConfetti(true);
-          saveData();
-        };
-
-        const rollbackLastTransaction = () => {
-          if (state.value.transactions.length === 0) return;
-          const lastTx = state.value.transactions[0];
-          const confirmed = confirm(`确定撤销最近一次操作吗？\n\n【${getChildName(lastTx.childId)}】${lastTx.reason} (${lastTx.pointsChange > 0 ? '+' : ''}${lastTx.pointsChange} PTS)`);
-          if (!confirmed) return;
-
-          const child = state.value.children.find(c => c.id === lastTx.childId);
-          if (child) {
-            child.currentPoints -= lastTx.pointsChange;
-            if (child.currentPoints < 0) child.currentPoints = 0;
-
-            const today = getTodayKey();
-            if (lastTx.type === 'earn' && lastTx.taskKey && child.dailyTasks && child.dailyTasks[today]) {
-              if (child.dailyTasks[today][lastTx.taskKey] > 0) {
-                child.dailyTasks[today][lastTx.taskKey] -= 1;
-              }
-            }
-
-            if (lastTx.type === 'redeem') {
-              if (child.dailyRedemptions && child.dailyRedemptions[today]) {
-                for (const w of wishItems) {
-                  if (lastTx.reason.includes(w.title)) {
-                    if (child.dailyRedemptions[today][w.id] > 0) {
-                      child.dailyRedemptions[today][w.id] -= 1;
-                    }
-                  }
-                }
-              }
-              if (lastTx.ticketId && child.tickets) {
-                child.tickets = child.tickets.filter(t => t.id !== lastTx.ticketId);
-              }
-            }
+        const confirmRedeem = (wish) => {
+          const child = currentChild.value;
+          if (isRedeemedToday(wish.id)) {
+            alert(`【每日防沉迷限制】\n\n"${wish.title}" 今天已经兑换过了，每人每天最多兑换一次，请明天再来！`);
+            return;
           }
 
-          state.value.transactions.shift();
-          customMascotSpeech.value = '';
-          saveData();
+          if (child.currentPoints < wish.points) {
+            alert(`当前积分不足，还差 ${wish.points - child.currentPoints} 分！继续加油哦！`);
+            return;
+          }
+
+          // 检查该孩子是否有未审核的积分，防止乱点后直接兑奖
+          const childPendingPts = state.value.transactions
+            .filter(tx => tx.childId === child.id && tx.auditStatus === 'pending' && tx.pointsChange > 0)
+            .reduce((s, tx) => s + tx.pointsChange, 0);
+
+          if (childPendingPts > 0 && !parentUnlocked.value) {
+            const ask = confirm(`🛡️ 诚实契约提醒：\n\n${child.nickName} 当前有 +${childPendingPts} 分处于【⏳待家长审核】状态。\n请爸爸妈妈输入家长 PIN 码（默认 8888），即可一键核准积分并立即兑换「${wish.title}」！`);
+            if (!ask) return;
+            requireParentAuth(() => {
+              state.value.transactions.forEach(tx => {
+                if (tx.childId === child.id && tx.auditStatus === 'pending') {
+                  tx.auditStatus = 'approved';
+                }
+              });
+              executeRedeem(wish);
+            });
+            return;
+          }
+
+          const confirmed = confirm(`🎉 确定为 ${child.name} (${child.nickName}) 兑换「${wish.title}」吗？\n\n• 扣除积分：${wish.points} PTS (SGD $${(wish.points * 0.01).toFixed(2)})\n• 兑换后将自动生成一张【🎟️金色心愿奖券】存入奖券包！`);
+          if (!confirmed) return;
+          executeRedeem(wish);
+        };
+
+        const useTicket = (tk) => {
+          requireParentAuth(() => {
+            const confirmed = confirm(`✨ 家长核销确认：\n\n现在为 ${currentChild.value.nickName} 兑现并使用「${tk.icon} ${tk.title}」吗？`);
+            if (!confirmed) return;
+            tk.used = true;
+            SoundAndVoiceEngine.playStarFanfare();
+            triggerConfetti(true);
+            saveData();
+          });
         };
 
         const exportJSON = () => {
@@ -1672,13 +2059,15 @@
         };
 
         const resetToDefaultPrompt = () => {
-          const confirmed = confirm("确定要将所有数据重置为初始白板底账吗？\n\nBrayden (健健 🦉): 148 PTS\nKayden (安安 🐯): 57 PTS\n请确认已备份！");
-          if (confirmed) {
-            state.value = JSON.parse(JSON.stringify(DEFAULT_DATA));
-            customMascotSpeech.value = '';
-            saveData();
-            alert("已恢复至初始底账。");
-          }
+          requireParentAuth(() => {
+            const confirmed = confirm("确定要将所有数据重置为初始白板底账吗？\n\nBrayden (健健 🦉): 148 PTS\nKayden (安安 🐯): 57 PTS\n请确认已备份！");
+            if (confirmed) {
+              state.value = JSON.parse(JSON.stringify(DEFAULT_DATA));
+              customMascotSpeech.value = '';
+              saveData();
+              alert("已恢复至初始底账。");
+            }
+          });
         };
 
         onMounted(() => {
@@ -1689,6 +2078,12 @@
           state,
           activeTab,
           voiceEnabled,
+          parentUnlocked,
+          showQuickAuditDrawer,
+          ledgerFilter,
+          auditFilters,
+          showPinModal,
+          pinInput,
           mascotJumping,
           floatingToast,
           currentChild,
@@ -1706,6 +2101,11 @@
           showCustomEarnModal,
           showChangelogModal,
           customEarn,
+          todayTransactions,
+          pendingAuditCount,
+          duplicateTxCountToday,
+          duplicateTxCountAll,
+          filteredTransactions,
           todayTaskTotal,
           adventureTrackPercent,
           nextMilestoneText,
@@ -1715,6 +2115,10 @@
           getLevelBadge,
           getTaskDoneCount,
           getTodayTaskCount,
+          toggleParentMode,
+          confirmPinModal,
+          cancelPinModal,
+          changeParentPin,
           toggleVoice,
           pokeMascot,
           selectChild,
@@ -1725,9 +2129,11 @@
           addBraydenCP,
           selectCompetition,
           submitCustomEarn,
+          approveSingleTx,
+          approveAllPending,
+          rejectTransaction,
           confirmRedeem,
           useTicket,
-          rollbackLastTransaction,
           exportJSON,
           importJSON,
           resetToDefaultPrompt
