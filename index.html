@@ -39,7 +39,7 @@
         </div>
 
         <button @click="showChangelogModal = true" class="flex-shrink-0 text-[11px] bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold px-2.5 py-1 rounded-full flex items-center gap-1 transition whitespace-nowrap shadow-xs active:scale-95">
-          <span>v1.2.3</span>
+          <span>v1.2.4</span>
           <span>📜日志</span>
         </button>
       </div>
@@ -78,39 +78,53 @@
             <div class="w-11 h-11 sm:w-12 sm:h-12 flex-shrink-0 rounded-2xl flex items-center justify-center p-0.5 bg-gradient-to-tr shadow-xs overflow-hidden" 
                  :class="kid.id === 'brayden' ? 'from-amber-50 to-amber-100/90' : 'from-amber-50 to-orange-100/90'">
               
-              <!-- Brayden 专属纯矢量大眼可爱猫头鹰 -->
+              <!-- Brayden 专属高辨识度纯矢量大眼萌系猫头鹰 -->
               <div v-if="kid.id === 'brayden'" class="w-full h-full flex items-center justify-center p-0.5">
                 <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-xs" xmlns="http://www.w3.org/2000/svg">
-                <!-- 萌系羽毛小耳簇 -->
-                <path d="M22 32 C15 18, 22 10, 32 18 C28 24, 25 28, 25 34 Z" fill="#92400E"/>
-                <path d="M78 32 C85 18, 78 10, 68 18 C72 24, 75 28, 75 34 Z" fill="#92400E"/>
-                <path d="M24 30 C19 20, 24 14, 30 20 Z" fill="#F59E0B"/>
-                <path d="M76 30 C81 20, 76 14, 70 20 Z" fill="#F59E0B"/>
-                <!-- 胖乎乎圆圆大脸庞 -->
-                <ellipse cx="50" cy="53" rx="39" ry="36" fill="#B45309"/>
-                <ellipse cx="50" cy="54" rx="36" ry="33" fill="#D97706"/>
-                <ellipse cx="50" cy="58" rx="29" ry="25" fill="#FEF08A"/>
-                <!-- 超萌大白眼眶 -->
-                <circle cx="35" cy="48" r="14.5" fill="#FFFFFF"/>
-                <circle cx="65" cy="48" r="14.5" fill="#FFFFFF"/>
-                <!-- 黑色灵动大眼珠 -->
-                <circle cx="36" cy="48" r="9" fill="#1E293B"/>
-                <circle cx="64" cy="48" r="9" fill="#1E293B"/>
-                <!-- 双星芒闪闪高光 -->
-                <circle cx="33" cy="44" r="3.5" fill="#FFFFFF"/>
-                <circle cx="61" cy="44" r="3.5" fill="#FFFFFF"/>
-                <circle cx="38" cy="51" r="1.5" fill="#FFFFFF"/>
-                <circle cx="66" cy="51" r="1.5" fill="#FFFFFF"/>
-                <!-- 可爱粉嫩腮红 -->
-                <ellipse cx="21" cy="62" rx="5.5" ry="3.5" fill="#FB7185" opacity="0.8"/>
-                <ellipse cx="79" cy="62" rx="5.5" ry="3.5" fill="#FB7185" opacity="0.8"/>
-                <!-- 萌系金橙小三角喙 -->
-                <polygon points="50,51 44,61 56,61" fill="#EA580C"/>
-                <polygon points="50,52 45,60 55,60" fill="#F97316"/>
-                <!-- 额头萌系小羽纹 -->
-                <path d="M48 25 L52 25 L50 29 Z" fill="#78350F"/>
-                <path d="M43 28 L46 28 L44 32 Z" fill="#78350F"/>
-                <path d="M57 28 L54 28 L56 32 Z" fill="#78350F"/>
+                <!-- 1. 经典猫头鹰羽毛尖耳角 (Iconic Pointed Ear Tufts) -->
+                <path d="M18 36 L7 10 L34 22 Z" fill="#78350F"/>
+                <path d="M82 36 L93 10 L66 22 Z" fill="#78350F"/>
+                <!-- 耳角内侧高光羽毛 -->
+                <path d="M20 32 L12 15 L31 22 Z" fill="#F59E0B"/>
+                <path d="M80 32 L88 15 L69 22 Z" fill="#F59E0B"/>
+
+                <!-- 2. 猫头鹰头部轮廓与锯齿蓬松脸颊 (Head with Fluffy Cheek Feathers) -->
+                <path d="M 28 22 C 40 18, 60 18, 72 22 C 80 25, 88 32, 90 42 L 96 48 L 88 52 L 95 58 L 87 63 L 91 69 L 80 73 C 72 82, 28 82, 20 73 L 9 69 L 13 63 L 5 58 L 12 52 L 4 48 L 10 42 C 12 32, 20 25, 28 22 Z" fill="#854D0E"/>
+                <ellipse cx="50" cy="52" rx="36" ry="28" fill="#B45309"/>
+
+                <!-- 3. 最具标志性的双大眼盘 (Iconic Dual Facial Discs / Spectacles) -->
+                <circle cx="34" cy="47" r="19" fill="#FFFDF5" stroke="#78350F" stroke-width="2.5"/>
+                <circle cx="66" cy="47" r="19" fill="#FFFDF5" stroke="#78350F" stroke-width="2.5"/>
+
+                <!-- 4. 猫头鹰金色大虹膜 (Golden Owl Irises) -->
+                <circle cx="34" cy="47" r="13" fill="#FBBF24"/>
+                <circle cx="66" cy="47" r="13" fill="#FBBF24"/>
+
+                <!-- 5. 黑色大瞳孔 -->
+                <circle cx="34" cy="47" r="8.5" fill="#18181B"/>
+                <circle cx="66" cy="47" r="8.5" fill="#18181B"/>
+
+                <!-- 6. 卡通萌系高光双光斑 (Sparkle Catchlights) -->
+                <circle cx="31" cy="43" r="3.2" fill="#FFFFFF"/>
+                <circle cx="63" cy="43" r="3.2" fill="#FFFFFF"/>
+                <circle cx="37" cy="50" r="1.5" fill="#FFFFFF"/>
+                <circle cx="69" cy="50" r="1.5" fill="#FFFFFF"/>
+
+                <!-- 7. 萌系害羞粉红腮红 (Pink Cheeks) -->
+                <ellipse cx="19" cy="62" rx="5.5" ry="3.5" fill="#F43F5E" opacity="0.5"/>
+                <ellipse cx="81" cy="62" rx="5.5" ry="3.5" fill="#F43F5E" opacity="0.5"/>
+
+                <!-- 8. 双眼正中间坚挺下垂的小鸟喙 (Iconic Owl Hook Beak) -->
+                <polygon points="44,47 56,47 50,60" fill="#C2410C"/>
+                <polygon points="45,47 55,47 50,58" fill="#EA580C"/>
+                <polygon points="47,48 53,48 50,55" fill="#F97316"/>
+
+                <!-- 9. 额头正中猫头鹰羽毛花纹 (Forehead Feather Chevrons) -->
+                <path d="M46 25 L50 29 L54 25" stroke="#451A03" stroke-width="2" stroke-linecap="round" fill="none"/>
+                <path d="M47 31 L50 34 L53 31" stroke="#451A03" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+
+                <!-- 10. 胸腹羽毛小碎花纹 (Chest Feather Marks) -->
+                <path d="M44 72 L47 75 L50 72 L53 75 L56 72" stroke="#FEF08A" stroke-width="2" stroke-linecap="round" fill="none"/>
               </svg>
               </div>
 
@@ -155,17 +169,17 @@
         <div class="flex items-center justify-between text-xs font-bold text-slate-700 mb-2.5">
           <span class="flex items-center gap-1.5 truncate">
             <span v-if="currentChild.id === 'brayden'" class="inline-flex items-center justify-center"><svg viewBox="0 0 100 100" class="w-4 h-4 inline-block flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 32 C15 18, 22 10, 32 18 C28 24, 25 28, 25 34 Z" fill="#92400E"/>
-              <path d="M78 32 C85 18, 78 10, 68 18 C72 24, 75 28, 75 34 Z" fill="#92400E"/>
-              <ellipse cx="50" cy="53" rx="39" ry="36" fill="#D97706"/>
-              <ellipse cx="50" cy="58" rx="29" ry="25" fill="#FEF08A"/>
-              <circle cx="35" cy="48" r="14.5" fill="#FFFFFF"/>
-              <circle cx="65" cy="48" r="14.5" fill="#FFFFFF"/>
-              <circle cx="36" cy="48" r="9" fill="#1E293B"/>
-              <circle cx="64" cy="48" r="9" fill="#1E293B"/>
-              <circle cx="33" cy="44" r="3.5" fill="#FFFFFF"/>
-              <circle cx="61" cy="44" r="3.5" fill="#FFFFFF"/>
-              <polygon points="50,51 44,61 56,61" fill="#EA580C"/>
+              <path d="M18 36 L7 10 L34 22 Z" fill="#78350F"/>
+              <path d="M82 36 L93 10 L66 22 Z" fill="#78350F"/>
+              <circle cx="34" cy="47" r="19" fill="#FFFDF5" stroke="#78350F" stroke-width="3"/>
+              <circle cx="66" cy="47" r="19" fill="#FFFDF5" stroke="#78350F" stroke-width="3"/>
+              <circle cx="34" cy="47" r="13" fill="#FBBF24"/>
+              <circle cx="66" cy="47" r="13" fill="#FBBF24"/>
+              <circle cx="34" cy="47" r="8.5" fill="#18181B"/>
+              <circle cx="66" cy="47" r="8.5" fill="#18181B"/>
+              <circle cx="31" cy="43" r="3.2" fill="#FFFFFF"/>
+              <circle cx="63" cy="43" r="3.2" fill="#FFFFFF"/>
+              <polygon points="44,47 56,47 50,60" fill="#EA580C"/>
             </svg></span>
             <span v-else class="text-xs">🐯</span>
             <span class="truncate">{{ currentChild.name }} ({{ currentChild.nickName }}) 的心愿达成率</span>
@@ -213,19 +227,19 @@
         <div class="min-w-0">
           <h2 class="text-base font-black text-slate-800 flex items-center gap-1.5 truncate">
             <span class="inline-flex items-center justify-center"><svg viewBox="0 0 100 100" class="w-5 h-5 inline-block flex-shrink-0 drop-shadow-2xs" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 32 C15 18, 22 10, 32 18 C28 24, 25 28, 25 34 Z" fill="#92400E"/>
-              <path d="M78 32 C85 18, 78 10, 68 18 C72 24, 75 28, 75 34 Z" fill="#92400E"/>
-              <ellipse cx="50" cy="53" rx="39" ry="36" fill="#D97706"/>
-              <ellipse cx="50" cy="58" rx="29" ry="25" fill="#FEF08A"/>
-              <circle cx="35" cy="48" r="14.5" fill="#FFFFFF"/>
-              <circle cx="65" cy="48" r="14.5" fill="#FFFFFF"/>
-              <circle cx="36" cy="48" r="9" fill="#1E293B"/>
-              <circle cx="64" cy="48" r="9" fill="#1E293B"/>
-              <circle cx="33" cy="44" r="3.5" fill="#FFFFFF"/>
-              <circle cx="61" cy="44" r="3.5" fill="#FFFFFF"/>
-              <ellipse cx="21" cy="62" rx="5.5" ry="3.5" fill="#FB7185" opacity="0.8"/>
-              <ellipse cx="79" cy="62" rx="5.5" ry="3.5" fill="#FB7185" opacity="0.8"/>
-              <polygon points="50,51 44,61 56,61" fill="#EA580C"/>
+              <path d="M18 36 L7 10 L34 22 Z" fill="#78350F"/>
+              <path d="M82 36 L93 10 L66 22 Z" fill="#78350F"/>
+              <circle cx="34" cy="47" r="19" fill="#FFFDF5" stroke="#78350F" stroke-width="3"/>
+              <circle cx="66" cy="47" r="19" fill="#FFFDF5" stroke="#78350F" stroke-width="3"/>
+              <circle cx="34" cy="47" r="13" fill="#FBBF24"/>
+              <circle cx="66" cy="47" r="13" fill="#FBBF24"/>
+              <circle cx="34" cy="47" r="8.5" fill="#18181B"/>
+              <circle cx="66" cy="47" r="8.5" fill="#18181B"/>
+              <circle cx="31" cy="43" r="3.2" fill="#FFFFFF"/>
+              <circle cx="63" cy="43" r="3.2" fill="#FFFFFF"/>
+              <ellipse cx="19" cy="62" rx="5.5" ry="3.5" fill="#F43F5E" opacity="0.6"/>
+              <ellipse cx="81" cy="62" rx="5.5" ry="3.5" fill="#F43F5E" opacity="0.6"/>
+              <polygon points="44,47 56,47 50,60" fill="#EA580C"/>
             </svg></span>
             <span class="truncate">Brayden (健健) 的成长任务</span>
           </h2>
@@ -730,10 +744,21 @@
         </div>
 
         <div class="mt-3 overflow-y-auto space-y-3.5 pr-1 text-xs text-slate-600">
-                              <!-- v1.2.3 -->
+                                        <!-- v1.2.4 -->
           <div class="p-3 bg-indigo-50/70 border border-indigo-100 rounded-2xl">
             <div class="flex items-center justify-between mb-1">
-              <span class="font-extrabold text-indigo-700 text-xs sm:text-sm">v1.2.3 (当前最新版)</span>
+              <span class="font-extrabold text-indigo-700 text-xs sm:text-sm">v1.2.4 (当前最新版)</span>
+              <span class="text-[10px] text-slate-400">2026-10-29</span>
+            </div>
+            <ul class="list-disc pl-4 space-y-1 text-slate-600 text-[11px]">
+              <li><strong>高辨识度萌系猫头鹰重绘</strong>：大幅强化猫头鹰标志性体貌特征——大白眼盘（Facial Discs）、金色大虹膜、高耸羽毛耳角（Ear Tufts）、倒三角下垂鸟喙与蓬松脸颊羽毛，一眼即辨是猫头鹰，生动灵动，与小老虎 <code>🐯</code> 达到卡哇伊纯正统一。</li>
+            </ul>
+          </div>
+
+          <!-- v1.2.3 -->
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-extrabold text-indigo-700 text-xs sm:text-sm">v1.2.3</span>
               <span class="text-[10px] text-slate-400">2026-10-29</span>
             </div>
             <ul class="list-disc pl-4 space-y-1 text-slate-600 text-[11px]">
