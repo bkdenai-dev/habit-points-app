@@ -115,13 +115,13 @@
             <!-- 版本日志按钮 -->
             <button @click="showChangelogModal = true" 
                     class="text-[11px] bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 border-b-2 font-extrabold px-2 py-1 rounded-full flex items-center gap-0.5 transition active:translate-y-0.5 whitespace-nowrap shadow-2xs">
-              <span>v2.1.0</span>
+              <span>v2.2.0</span>
               <span>📜</span>
             </button>
           </div>
         </div>
 
-        <!-- 紧凑游戏规则微标行 -->
+        <!-- 紧凑游戏规则微标行 + 云端实时同步状态指示器 -->
         <div class="mt-2 flex flex-wrap items-center justify-between gap-1.5 text-[10px] sm:text-[11px]">
           <div class="flex flex-wrap items-center gap-1.5">
             <span class="bg-white/90 text-slate-700 font-bold px-2 py-0.5 rounded-lg border border-slate-200/80 shadow-2xs">
@@ -130,9 +130,19 @@
             <span class="bg-emerald-500/15 text-emerald-800 font-extrabold px-2 py-0.5 rounded-lg border border-emerald-300/60">
               🪙 100 PTS = SGD $1.00
             </span>
-            <span class="bg-amber-500/15 text-amber-900 font-bold px-2 py-0.5 rounded-lg border border-amber-300/60">
-              🛡️ 乐观打卡 • 家长定期审核盖章
-            </span>
+            <!-- 云端实时同步状态按钮 (点击可立即强制刷新同步) -->
+            <button @click="syncFromCloud(true)"
+                    title="点击立即与云端同步多设备最新积分"
+                    :class="{
+                      'bg-sky-500/15 text-sky-900 border-sky-300/70': cloudSyncStatus === 'synced',
+                      'bg-indigo-500/15 text-indigo-800 border-indigo-300/70 animate-pulse': cloudSyncStatus === 'syncing',
+                      'bg-rose-500/15 text-rose-800 border-rose-300/70': cloudSyncStatus === 'offline'
+                    }"
+                    class="font-extrabold px-2 py-0.5 rounded-lg border flex items-center gap-1 transition active:scale-95 cursor-pointer">
+              <span v-if="cloudSyncStatus === 'synced'">☁️ 多端实时云同步{{ lastSyncTimeStr ? ' • ' + lastSyncTimeStr : '' }}</span>
+              <span v-else-if="cloudSyncStatus === 'syncing'">🔄 云端同步中...</span>
+              <span v-else>⚠️ 离线缓存模式 (点击重连)</span>
+            </button>
           </div>
         </div>
       </header>
@@ -1205,10 +1215,23 @@
           </div>
 
           <div class="mt-3 overflow-y-auto space-y-3.5 pr-1 text-xs text-slate-600">
-            <!-- v2.1.0 -->
-            <div class="p-3.5 bg-gradient-to-br from-amber-50 to-emerald-50/70 border-2 border-amber-300 rounded-2xl">
+            <!-- v2.2.0 -->
+            <div class="p-3.5 bg-gradient-to-br from-sky-50 via-indigo-50/70 to-emerald-50/70 border-2 border-sky-400 rounded-2xl">
               <div class="flex items-center justify-between mb-1.5">
-                <span class="font-black text-amber-900 text-xs sm:text-sm">🛡️ v2.1.0 诚实契约与家长定期审核版 (当前最新版)</span>
+                <span class="font-black text-sky-900 text-xs sm:text-sm">☁️ v2.2.0 全端实时云同步版 (当前最新版)</span>
+                <span class="text-[10px] text-slate-500 font-bold">2026-10-30</span>
+              </div>
+              <ul class="list-disc pl-4 space-y-1 text-slate-700 text-[11px]">
+                <li><strong>🌐 Cloudflare Durable Objects SQLite 全球强一致云数据库</strong>：彻底解决此前纯浏览器 <code>localStorage</code> 跨设备不互通的问题；现在手机、iPad、电脑任意一端打卡加分或家长审核，全屋所有设备自动实时同步！</li>
+                <li><strong>🔀 智能无损合并引擎 (CRDT 事务级合并)</strong>：升级前已在某台手机或平板上打过卡的本地记录，打开页面时会自动无损合并上云并重算最新总积分，绝不覆盖丢失任何一笔历史加分。</li>
+                <li><strong>⚡ 4 秒实时轮询 + 切屏唤醒秒级同步</strong>：顶部新增 <code>☁️ 多端实时云同步</code> 状态胶囊，支持点击手动刷新或切回微信/浏览器时秒级拉取最新数据。</li>
+              </ul>
+            </div>
+
+            <!-- v2.1.0 -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="font-black text-amber-900 text-xs sm:text-sm">🛡️ v2.1.0 诚实契约与家长定期审核版</span>
                 <span class="text-[10px] text-slate-500 font-bold">2026-10-29</span>
               </div>
               <ul class="list-disc pl-4 space-y-1 text-slate-700 text-[11px]">
@@ -1336,7 +1359,7 @@
     const STORAGE_KEY = "HABIT_POINTS_DATA_v1_2_2";
 
     const DEFAULT_DATA = {
-      version: "2.1.0",
+      version: "2.2.0",
       parentPin: "8888",
       activeChildId: "brayden",
       children: [
@@ -1405,6 +1428,11 @@
 
         // Anti-spam click cooldown map
         const lastClickTimeMap = {};
+
+        // Cloud Real-Time Sync State (Cloudflare Durable Objects SQLite)
+        const cloudSyncStatus = ref('syncing'); // 'synced' | 'syncing' | 'offline'
+        const lastSyncTimeStr = ref('');
+        let isPushingCloud = false;
 
         const mascotJumping = ref(false);
         const customMascotSpeech = ref('');
@@ -1605,8 +1633,134 @@
           return currentChild.value.tickets.filter(t => !t.used).length;
         });
 
-        const saveData = () => {
+        const formatSyncClock = () => {
+          const d = new Date();
+          return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+        };
+
+        const hasCustomLocalData = (st) => {
+          if (!st || !st.transactions) return false;
+          const nonInit = st.transactions.some(t => t && t.taskKey !== 'init' && !String(t.id).startsWith('init_'));
+          const b = (st.children || []).find(c => c.id === 'brayden');
+          const k = (st.children || []).find(c => c.id === 'kayden');
+          const ptsChanged = (b && b.currentPoints !== 148) || (k && k.currentPoints !== 57);
+          return nonInit || ptsChanged;
+        };
+
+        const applyCloudStateToLocal = (cloudState) => {
+          if (!cloudState || !cloudState.children) return;
+          const currentActiveId = state.value.activeChildId || 'brayden';
+          cloudState.children.forEach(c => {
+            if (c.id === 'brayden') {
+              c.avatar = '🦉';
+              c.nickName = '健健';
+              c.role = '哥哥 • 探索求知';
+            } else if (c.id === 'kayden') {
+              c.avatar = '🐯';
+              c.nickName = '安安';
+              c.role = '弟弟 • 启蒙成长';
+            }
+            if (!c.dailyRedemptions) c.dailyRedemptions = {};
+            if (!c.dailyTasks) c.dailyTasks = {};
+            if (!c.tickets) c.tickets = [];
+          });
+          state.value = {
+            ...cloudState,
+            activeChildId: currentActiveId
+          };
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state.value));
+        };
+
+        const pushToCloud = async (isReset = false) => {
+          isPushingCloud = true;
+          cloudSyncStatus.value = 'syncing';
+          try {
+            const payload = isReset ? { ...state.value, isReset: true } : state.value;
+            const res = await fetch('/api/state', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.ok && data.state) {
+                applyCloudStateToLocal(data.state);
+              }
+              cloudSyncStatus.value = 'synced';
+              lastSyncTimeStr.value = formatSyncClock();
+            } else {
+              cloudSyncStatus.value = 'offline';
+            }
+          } catch (e) {
+            cloudSyncStatus.value = 'offline';
+          } finally {
+            isPushingCloud = false;
+          }
+        };
+
+        const syncFromCloud = async (isManual = false) => {
+          if (isPushingCloud) return;
+          if (isManual) cloudSyncStatus.value = 'syncing';
+          try {
+            const res = await fetch('/api/state?t=' + Date.now(), { cache: 'no-store' });
+            if (!res.ok) {
+              cloudSyncStatus.value = 'offline';
+              return;
+            }
+            const data = await res.json();
+            if (!data || !data.ok) {
+              cloudSyncStatus.value = 'offline';
+              return;
+            }
+            const cloudState = data.state;
+            if (!cloudState) {
+              // 云端尚无数据：若本机已有历史加分数据，立即自动上云初始化；否则保持待命避免空白设备覆盖
+              if (hasCustomLocalData(state.value)) {
+                await pushToCloud(false);
+              } else {
+                cloudSyncStatus.value = 'synced';
+                lastSyncTimeStr.value = formatSyncClock();
+              }
+              return;
+            }
+
+            // 检查本机是否有尚未合并到云端的本地打卡流水或审核状态变更
+            const cloudTxMap = new Map((cloudState.transactions || []).map(t => [t.id, t]));
+            const hasUnsyncedLocalTx = (state.value.transactions || []).some(t => {
+              if (!t || !t.id) return false;
+              if (!cloudTxMap.has(t.id)) return true;
+              const ct = cloudTxMap.get(t.id);
+              return (t.auditStatus !== ct.auditStatus && t.auditStatus !== 'pending');
+            });
+
+            if (hasUnsyncedLocalTx) {
+              // 自动将本机未同步流水与云端进行 CRDT 合并
+              await pushToCloud(false);
+              if (isManual) showFloatingReward('☁️', '已将本机与云端数据双向合并同步', 0, false);
+              return;
+            }
+
+            // 若云端版本更新或积分有变化，立即更新本机状态
+            if (
+              !state.value.syncRevision ||
+              cloudState.syncRevision !== state.value.syncRevision ||
+              JSON.stringify(cloudState.transactions) !== JSON.stringify(state.value.transactions)
+            ) {
+              applyCloudStateToLocal(cloudState);
+            }
+            cloudSyncStatus.value = 'synced';
+            lastSyncTimeStr.value = formatSyncClock();
+            if (isManual) showFloatingReward('☁️', '多设备云端积分已同步至最新', 0, false);
+          } catch (e) {
+            cloudSyncStatus.value = 'offline';
+          }
+        };
+
+        const saveData = (shouldPushCloud = true, isReset = false) => {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.value));
+          if (shouldPushCloud) {
+            pushToCloud(isReset);
+          }
         };
 
         const loadData = () => {
@@ -1735,7 +1889,7 @@
         const selectChild = (id) => {
           state.value.activeChildId = id;
           customMascotSpeech.value = '';
-          saveData();
+          saveData(false);
         };
 
         const getChildName = (childId) => {
@@ -1808,7 +1962,7 @@
           const newCount = getTodayTaskCount(child);
 
           state.value.transactions.unshift({
-            id: 'tx_' + nowMs,
+            id: 'tx_' + nowMs + '_' + Math.random().toString(36).slice(2, 6),
             dateKey: today,
             timestamp: getTimestamp(),
             childId: child.id,
@@ -2060,18 +2214,29 @@
 
         const resetToDefaultPrompt = () => {
           requireParentAuth(() => {
-            const confirmed = confirm("确定要将所有数据重置为初始白板底账吗？\n\nBrayden (健健 🦉): 148 PTS\nKayden (安安 🐯): 57 PTS\n请确认已备份！");
+            const confirmed = confirm("确定要将所有设备与云端数据重置为初始白板底账吗？\n\nBrayden (健健 🦉): 148 PTS\nKayden (安安 🐯): 57 PTS\n请确认已备份！");
             if (confirmed) {
               state.value = JSON.parse(JSON.stringify(DEFAULT_DATA));
               customMascotSpeech.value = '';
-              saveData();
-              alert("已恢复至初始底账。");
+              saveData(true, true);
+              alert("已将本机与云端恢复至初始底账。");
             }
           });
         };
 
         onMounted(() => {
           loadData();
+          syncFromCloud(false);
+          // 每 4 秒自动轮询云端最新状态，实现手机/平板/电脑多端准实时同步
+          setInterval(() => {
+            if (!document.hidden) {
+              syncFromCloud(false);
+            }
+          }, 4000);
+          window.addEventListener('focus', () => syncFromCloud(false));
+          document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) syncFromCloud(false);
+          });
         });
 
         return {
@@ -2079,6 +2244,9 @@
           activeTab,
           voiceEnabled,
           parentUnlocked,
+          cloudSyncStatus,
+          lastSyncTimeStr,
+          syncFromCloud,
           showQuickAuditDrawer,
           ledgerFilter,
           auditFilters,
