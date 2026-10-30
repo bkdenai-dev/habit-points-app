@@ -68,38 +68,132 @@
       border: 2px dashed #F59E0B;
     }
 
-    /* ================= 魔法护眼星空夜色模式 (Dark Theme Overrides) ================= */
+    /* ================= 魔法护眼星空夜色模式 (Dark Theme Overrides v2.4.1) ================= */
+    html.dark-theme,
+    body.dark-theme,
     .dark-theme {
       background-color: #0B1120 !important;
       color: #F8FAFC !important;
     }
-    .dark-theme .bg-white {
+    /* 星空微光呼吸背景效果 */
+    .dark-theme#app {
+      background-image: 
+        radial-gradient(1.5px 1.5px at 24px 36px, rgba(255,255,255,0.45), transparent),
+        radial-gradient(1px 1px at 90px 80px, rgba(251,191,36,0.4), transparent),
+        radial-gradient(1.5px 1.5px at 180px 45px, rgba(165,180,252,0.5), transparent),
+        radial-gradient(1px 1px at 260px 120px, rgba(255,255,255,0.35), transparent),
+        linear-gradient(180deg, #070B19 0%, #111827 45%, #0B1120 100%) !important;
+      background-size: 320px 180px, 320px 180px, 320px 180px, 320px 180px, 100% 100%;
+    }
+    /* 白色与半透明白色卡片全面转深邃星空蓝灰 */
+    .dark-theme .bg-white,
+    .dark-theme [class*="bg-white/"] {
       background-color: #1E293B !important;
       color: #F8FAFC !important;
       border-color: #334155 !important;
     }
-    .dark-theme .bg-slate-50 {
+    .dark-theme .bg-slate-50,
+    .dark-theme [class*="bg-slate-50/"] {
       background-color: #0F172A !important;
       color: #E2E8F0 !important;
       border-color: #334155 !important;
     }
-    .dark-theme .bg-slate-100 {
+    .dark-theme .bg-slate-100,
+    .dark-theme .bg-slate-200 {
       background-color: #1E293B !important;
       color: #CBD5E1 !important;
+      border-color: #475569 !important;
     }
+    /* 渐变浅色背景舱位在夜间模式下转为护眼深色渐变 */
+    .dark-theme [class*="from-indigo-50"],
+    .dark-theme [class*="from-sky-50"] {
+      background-image: linear-gradient(135deg, rgba(30, 27, 75, 0.88) 0%, rgba(15, 23, 42, 0.94) 55%, rgba(30, 41, 59, 0.92) 100%) !important;
+      border-color: #4338CA !important;
+    }
+    .dark-theme [class*="from-amber-50"],
+    .dark-theme [class*="from-rose-50"] {
+      background-image: linear-gradient(135deg, rgba(69, 26, 3, 0.72) 0%, rgba(30, 41, 59, 0.94) 100%) !important;
+      border-color: #B45309 !important;
+    }
+    /* 浅色徽章与状态块夜间高对比度适配 */
+    .dark-theme .bg-indigo-50,
+    .dark-theme .bg-indigo-100 {
+      background-color: rgba(49, 46, 129, 0.65) !important;
+      color: #C7D2FE !important;
+      border-color: #4F46E5 !important;
+    }
+    .dark-theme .bg-amber-50,
+    .dark-theme .bg-amber-100,
+    .dark-theme [class*="bg-amber-100/"],
+    .dark-theme [class*="bg-amber-200/"] {
+      background-color: rgba(120, 53, 15, 0.65) !important;
+      color: #FDE68A !important;
+      border-color: #D97706 !important;
+    }
+    .dark-theme .bg-emerald-50,
+    .dark-theme .bg-emerald-100,
+    .dark-theme [class*="bg-emerald-50/"],
+    .dark-theme [class*="bg-emerald-100/"] {
+      background-color: rgba(6, 78, 59, 0.65) !important;
+      color: #A7F3D0 !important;
+      border-color: #10B981 !important;
+    }
+    .dark-theme .bg-rose-50,
+    .dark-theme .bg-rose-100 {
+      background-color: rgba(136, 19, 55, 0.6) !important;
+      color: #FECDD3 !important;
+      border-color: #F43F5E !important;
+    }
+    /* 金色奖券夜间流光质感 */
+    .dark-theme .golden-ticket {
+      background: linear-gradient(135deg, #451A03 0%, #78350F 55%, #92400E 100%) !important;
+      border: 2px dashed #FBBF24 !important;
+      color: #FEF3C7 !important;
+    }
+    /* 文字可读性全面提亮 */
+    .dark-theme .text-slate-900,
     .dark-theme .text-slate-800 { color: #F8FAFC !important; }
     .dark-theme .text-slate-700 { color: #E2E8F0 !important; }
     .dark-theme .text-slate-600 { color: #CBD5E1 !important; }
     .dark-theme .text-slate-500 { color: #94A3B8 !important; }
+    .dark-theme .text-slate-400 { color: #64748B !important; }
+    .dark-theme .text-indigo-950,
+    .dark-theme .text-indigo-900,
+    .dark-theme .text-indigo-800,
+    .dark-theme .text-indigo-700,
+    .dark-theme .text-indigo-600 { color: #A5B4FC !important; }
+    .dark-theme .text-amber-950,
+    .dark-theme .text-amber-900,
+    .dark-theme .text-amber-800,
+    .dark-theme .text-amber-700 { color: #FCD34D !important; }
+    .dark-theme .text-emerald-950,
+    .dark-theme .text-emerald-900,
+    .dark-theme .text-emerald-800,
+    .dark-theme .text-emerald-700 { color: #6EE7B7 !important; }
+    .dark-theme .text-rose-800,
+    .dark-theme .text-rose-700 { color: #FDA4AF !important; }
+    .dark-theme .text-orange-700,
+    .dark-theme .text-orange-600 { color: #FDBA74 !important; }
+    /* 边框与分割线护眼暗化 */
     .dark-theme .border-slate-100,
     .dark-theme .border-slate-200,
-    .dark-theme .border-slate-300 {
+    .dark-theme [class*="border-slate-200/"],
+    .dark-theme .border-slate-300,
+    .dark-theme .border-indigo-100,
+    .dark-theme .border-indigo-200,
+    .dark-theme .border-amber-100,
+    .dark-theme .border-amber-200,
+    .dark-theme .border-emerald-200 {
       border-color: #334155 !important;
     }
-    .dark-theme .toy-card.bg-white {
+    .dark-theme .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+      border-color: #1E293B !important;
+    }
+    .dark-theme .toy-card.bg-white,
+    .dark-theme .toy-card.bg-slate-50 {
       background-color: #1E293B !important;
       border-color: #475569 !important;
-      border-bottom-color: #0F172A !important;
+      border-bottom-color: #020617 !important;
     }
     .dark-theme input {
       background-color: #0F172A !important;
@@ -108,8 +202,9 @@
     }
   </style>
 </head>
-<body :class="isDark ? 'dark-theme' : 'bg-slate-50 text-slate-800'" class="min-h-screen pb-16">
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-16 transition-colors duration-500">
   <div id="app" :class="[
+    isDark ? 'dark-theme' : '',
     isDark 
       ? (isBrayden ? 'bg-gradient-to-b from-slate-950 via-indigo-950/40 to-slate-950' : 'bg-gradient-to-b from-slate-950 via-amber-950/40 to-slate-950')
       : (isBrayden ? 'bg-gradient-to-b from-indigo-100/80 via-sky-50/70 to-indigo-50/50' : 'bg-gradient-to-b from-amber-100/80 via-orange-50/70 to-yellow-50/50')
@@ -169,7 +264,7 @@
             <button @click="showChangelogModal = true" 
                     :class="isDark ? 'bg-slate-800 text-indigo-300 border-slate-700' : 'bg-white text-indigo-700 border-indigo-200'"
                     class="text-[11px] hover:opacity-90 border border-b-2 font-extrabold px-2 py-1 rounded-full flex items-center gap-0.5 transition active:translate-y-0.5 whitespace-nowrap shadow-2xs">
-              <span>v2.4.0</span>
+              <span>v2.4.1</span>
               <span>📜</span>
             </button>
           </div>
@@ -1383,17 +1478,17 @@
           </div>
 
           <div class="overflow-y-auto space-y-3.5 mt-3 pr-1 text-xs leading-relaxed">
-            <!-- v2.4.0 -->
+            <!-- v2.4.1 -->
             <div class="p-3.5 bg-gradient-to-br from-indigo-50 via-sky-50 to-amber-50 border-2 border-indigo-400 rounded-2xl">
               <div class="flex items-center justify-between mb-1.5">
-                <span class="font-black text-indigo-950 text-xs sm:text-sm">🌟 v2.4.0 超拟真真人语音伴学与自主学习力版 (最新版)</span>
+                <span class="font-black text-indigo-950 text-xs sm:text-sm">🌟 v2.4.1 日夜护眼星空模式深度修复与真人语音伴学版 (最新版)</span>
                 <span class="text-[10px] text-slate-500 font-bold">2026-10-30</span>
               </div>
               <ul class="list-disc pl-4 space-y-1 text-slate-700 text-[11px]">
-                <li><strong>🎙️ 微软 Edge Neural 超拟真真人语音升级</strong>：全面支持纯 JavaScript 破解并接入微软顶级中文神经真人语音（晓晓·知性姐姐、云希·阳光少年、晓伊·亲切名师），100% 告别冰冷机械音，全天候零依赖稳定合成！</li>
+                <li><strong>🌙 系统级日夜护眼星空模式深度修复 (`v2.4.1`)</strong>：修复 Vue `#app` 挂载作用域外 `<body>` 未同步 `.dark-theme` 的缺陷；新增 `watch(isDark)` 实时同步 `<html>`/`<body>` 与 `#app` 星空微光呼吸背景，并全量适配专注训练舱、三星能量槽、KooBits 卡片、金色心愿奖券及所有半透明卡片的夜间深邃配色与切换飘字提示。</li>
+                <li><strong>🎙️ 微软 Edge Neural 超拟真真人语音升级 (`v2.4.0`)</strong>：全面支持纯 JavaScript 接入微软顶级中文神经真人语音（晓晓·知性姐姐、云希·阳光少年、晓伊·亲切名师），100% 告别冰冷机械音！</li>
                 <li><strong>💬 萌宠 AI 伴学对话舱 & 费曼小讲台</strong>：支持手机麦克风语音录入，孩子可随时与猫头鹰博士 🦉 / 小老虎伙伴 🐯 语音对话；集成一键费曼输出、翻转出题考爸妈、畏难三步拆解，AI 回复自动真人朗读！</li>
                 <li><strong>🍅 15分钟专注番茄钟 & 🪄 三步微分解闯关舱</strong>：践行《如何培养孩子自主学习力》，先从最容易的题目开始建立必胜心流；内置安心自主入睡三步法与畏难攻坚三步法。</li>
-                <li><strong>🌙 系统级日夜护眼星空模式 (Auto Day / Night Mode)</strong>：支持「跟随系统 / ☀️日间 / 🌙护眼夜色」一键平滑切换，夜间自动渲染深邃星空防刺眼。</li>
                 <li><strong>📱 屏幕时间契约特权加固</strong>：心愿商城落实“屏幕时间不是天经地义权利，而是履行自律责任后可交易的特权”，需当日完成至少 1 项任务方可兑换。</li>
               </ul>
             </div>
@@ -1433,7 +1528,7 @@
   </div>
 
   <script>
-    const { createApp, ref, computed, onMounted } = Vue;
+    const { createApp, ref, computed, watch, onMounted } = Vue;
 
     // 多感官音效与微软 Edge Neural 真人语音引擎
     const SoundAndVoiceEngine = {
@@ -1549,7 +1644,7 @@
     const STORAGE_KEY = "HABIT_POINTS_DATA_v1_2_2";
 
     const DEFAULT_DATA = {
-      version: "2.4.0",
+      version: "2.4.1",
       parentPin: "8888",
       activeChildId: "brayden",
       children: [
@@ -1620,11 +1715,28 @@
           return systemPrefersDark.value;
         });
 
+        // 实时将 .dark-theme 同步至 <html> 与 <body>，确保 Vue #app 外部与系统背景色 100% 同步
+        watch(isDark, (darkVal) => {
+          if (typeof document !== 'undefined') {
+            document.documentElement.classList.toggle('dark-theme', darkVal);
+            if (document.body) {
+              document.body.classList.toggle('dark-theme', darkVal);
+            }
+          }
+        }, { immediate: true });
+
         const cycleThemeMode = () => {
           if (themeMode.value === 'auto') themeMode.value = 'light';
           else if (themeMode.value === 'light') themeMode.value = 'dark';
           else themeMode.value = 'auto';
           localStorage.setItem('habit_app_theme_mode', themeMode.value);
+
+          const modeMsg = themeMode.value === 'dark'
+            ? '🌙 已切换至护眼星空夜色模式'
+            : (themeMode.value === 'light'
+                ? '☀️ 已切换至明亮日间模式'
+                : `🖥️ 已切换至跟随系统 (${isDark.value ? '夜间' : '日间'})`);
+          showFloatingReward(isDark.value ? '🌙' : '☀️', modeMsg, 0, false);
         };
 
         // 微软 Edge Neural 真人语音模式 ('xiaoxiao' | 'yunxi' | 'xiaoyi' | 'off')
