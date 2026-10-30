@@ -264,7 +264,7 @@
             <button @click="showChangelogModal = true" 
                     :class="isDark ? 'bg-slate-800 text-indigo-300 border-slate-700' : 'bg-white text-indigo-700 border-indigo-200'"
                     class="text-[11px] hover:opacity-90 border border-b-2 font-extrabold px-2 py-1 rounded-full flex items-center gap-0.5 transition active:translate-y-0.5 whitespace-nowrap shadow-2xs">
-              <span>v2.4.1</span>
+              <span>v2.4.2</span>
               <span>📜</span>
             </button>
           </div>
@@ -1061,7 +1061,7 @@
           <button @click="showCompetitionModal = true" 
                   class="toy-card flex-1 py-3 px-4 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-white font-black text-xs sm:text-sm rounded-2xl border-2 border-amber-300 border-b-4 border-b-amber-700 shadow-sm flex items-center justify-center gap-1.5">
             <span class="text-lg">🏆</span>
-            <span>录入音乐比赛 / 考级大成就 (+100 ~ 1,000分)</span>
+            <span>录入各类比赛获奖 / 考级大成就 (+100 ~ 1,000分)</span>
           </button>
           <button @click="showCustomEarnModal = true" 
                   class="toy-card py-3 px-4 bg-white text-slate-700 font-black text-xs sm:text-sm rounded-2xl border-2 border-slate-200 border-b-4 border-b-slate-300 flex items-center justify-center gap-1.5">
@@ -1402,34 +1402,37 @@
         </div>
       </div>
 
-      <!-- 音乐比赛/考级成就录入弹窗 -->
+      <!-- 各类比赛获奖与考级成就录入弹窗 -->
       <div v-if="showCompetitionModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-5 border-2 border-amber-400 shadow-2xl">
           <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-            <h3 class="font-black text-base text-slate-800 flex items-center gap-1.5">
-              <span>🏆</span> 录入音乐比赛 / 考级大成就
-            </h3>
+            <div>
+              <h3 class="font-black text-base text-slate-800 flex items-center gap-1.5">
+                <span>🏆</span> 录入各类比赛获奖 / 考级大成就
+              </h3>
+              <p class="text-[10px] text-slate-400 mt-0.5">支持体育、数学、围棋、才艺、朗诵、音乐、考级等各类荣誉 (需家长 PIN 码验证)</p>
+            </div>
             <button @click="showCompetitionModal = false" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
           </div>
           <div class="space-y-2 mt-3">
-            <button @click="selectCompetition('音乐比赛第一名', 1000)" class="toy-card w-full p-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-2xl font-black text-xs flex justify-between">
-              <span>🥇 音乐比赛 第一名 (冠军)</span>
+            <button @click="selectCompetition('比赛第一名 (冠军)', 1000)" class="toy-card w-full p-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-2xl font-black text-xs flex justify-between">
+              <span>🥇 各类比赛 第一名 (冠军)</span>
               <span>+1,000 分</span>
             </button>
-            <button @click="selectCompetition('音乐比赛第二名', 600)" class="toy-card w-full p-3 bg-gradient-to-r from-slate-400 to-slate-500 text-white rounded-2xl font-black text-xs flex justify-between">
-              <span>🥈 音乐比赛 第二名 (亚军)</span>
+            <button @click="selectCompetition('比赛第二名 (亚军)', 600)" class="toy-card w-full p-3 bg-gradient-to-r from-slate-400 to-slate-500 text-white rounded-2xl font-black text-xs flex justify-between">
+              <span>🥈 各类比赛 第二名 (亚军)</span>
               <span>+600 分</span>
             </button>
-            <button @click="selectCompetition('音乐比赛第三名', 400)" class="toy-card w-full p-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-2xl font-black text-xs flex justify-between">
-              <span>🥉 音乐比赛 第三名 (季军)</span>
+            <button @click="selectCompetition('比赛第三名 (季军)', 400)" class="toy-card w-full p-3 bg-gradient-to-r from-amber-700 to-amber-800 text-white rounded-2xl font-black text-xs flex justify-between">
+              <span>🥉 各类比赛 第三名 (季军)</span>
               <span>+400 分</span>
             </button>
-            <button @click="selectCompetition('音乐比赛优秀奖', 200)" class="toy-card w-full p-3 bg-slate-100 text-slate-800 rounded-2xl font-black text-xs flex justify-between">
-              <span>🎖️ 音乐比赛 优秀奖 / 荣誉奖</span>
+            <button @click="selectCompetition('比赛优秀奖 / 荣誉奖', 200)" class="toy-card w-full p-3 bg-slate-100 text-slate-800 rounded-2xl font-black text-xs flex justify-between">
+              <span>🎖️ 各类比赛 优秀奖 / 荣誉奖</span>
               <span>+200 分</span>
             </button>
-            <button @click="selectCompetition('钢琴考级通过', 300)" class="toy-card w-full p-3 bg-indigo-50 text-indigo-900 border border-indigo-200 rounded-2xl font-black text-xs flex justify-between">
-              <span>🎹 钢琴考级 顺利通过</span>
+            <button @click="selectCompetition('专业考级认证通过', 300)" class="toy-card w-full p-3 bg-indigo-50 text-indigo-900 border border-indigo-200 rounded-2xl font-black text-xs flex justify-between">
+              <span>🏅 专业考级 / 技能认证 顺利通过</span>
               <span>+300 分</span>
             </button>
           </div>
@@ -1478,18 +1481,27 @@
           </div>
 
           <div class="overflow-y-auto space-y-3.5 mt-3 pr-1 text-xs leading-relaxed">
-            <!-- v2.4.1 -->
-            <div class="p-3.5 bg-gradient-to-br from-indigo-50 via-sky-50 to-amber-50 border-2 border-indigo-400 rounded-2xl">
+            <!-- v2.4.2 -->
+            <div class="p-3.5 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-400 rounded-2xl">
               <div class="flex items-center justify-between mb-1.5">
-                <span class="font-black text-indigo-950 text-xs sm:text-sm">🌟 v2.4.1 日夜护眼星空模式深度修复与真人语音伴学版 (最新版)</span>
+                <span class="font-black text-amber-950 text-xs sm:text-sm">🌟 v2.4.2 安安历史积分权威校准与通用比赛奖牌体系升级 (最新版)</span>
                 <span class="text-[10px] text-slate-500 font-bold">2026-10-30</span>
               </div>
               <ul class="list-disc pl-4 space-y-1 text-slate-700 text-[11px]">
-                <li><strong>🌙 系统级日夜护眼星空模式深度修复 (`v2.4.1`)</strong>：修复 Vue `#app` 挂载作用域外 `<body>` 未同步 `.dark-theme` 的缺陷；新增 `watch(isDark)` 实时同步 `<html>`/`<body>` 与 `#app` 星空微光呼吸背景，并全量适配专注训练舱、三星能量槽、KooBits 卡片、金色心愿奖券及所有半透明卡片的夜间深邃配色与切换飘字提示。</li>
-                <li><strong>🎙️ 微软 Edge Neural 超拟真真人语音升级 (`v2.4.0`)</strong>：全面支持纯 JavaScript 接入微软顶级中文神经真人语音（晓晓·知性姐姐、云希·阳光少年、晓伊·亲切名师），100% 告别冰冷机械音！</li>
-                <li><strong>💬 萌宠 AI 伴学对话舱 & 费曼小讲台</strong>：支持手机麦克风语音录入，孩子可随时与猫头鹰博士 🦉 / 小老虎伙伴 🐯 语音对话；集成一键费曼输出、翻转出题考爸妈、畏难三步拆解，AI 回复自动真人朗读！</li>
-                <li><strong>🍅 15分钟专注番茄钟 & 🪄 三步微分解闯关舱</strong>：践行《如何培养孩子自主学习力》，先从最容易的题目开始建立必胜心流；内置安心自主入睡三步法与畏难攻坚三步法。</li>
-                <li><strong>📱 屏幕时间契约特权加固</strong>：心愿商城落实“屏幕时间不是天经地义权利，而是履行自律责任后可交易的特权”，需当日完成至少 1 项任务方可兑换。</li>
+                <li><strong>🛡️ 安安历史乱点异常流水全网驳回清洗</strong>：彻底清除移动端离线误触连击产生的异常比赛加分，权威校准安安实际分数为 <strong>35 PTS</strong>（等级自动且精准对应为 <code>🐯 Lv.1 萌萌小虎崽</code>，距下一阶仅差 15 分）。</li>
+                <li><strong>🏆 比赛奖牌体系全面泛化</strong>：移除“音乐”单一限定，全面支持数学竞赛、体育运动、绘画书法、围棋象棋、才艺朗诵、专业技能考级等任何比赛奖牌一键录入。</li>
+                <li><strong>🔒 比赛大额加分家长 PIN 门禁加固</strong>：录入各类比赛奖牌大成就自动呼出家长 PIN 码（默认 8888）验证防误触，彻底杜绝儿童在移动端乱点刷上万分的风险。</li>
+              </ul>
+            </div>
+
+            <!-- v2.4.1 -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="font-black text-indigo-950 text-xs sm:text-sm">🌙 v2.4.1 日夜护眼星空模式深度修复版</span>
+                <span class="text-[10px] text-slate-500 font-bold">2026-10-30</span>
+              </div>
+              <ul class="list-disc pl-4 space-y-1 text-slate-600 text-[11px]">
+                <li>修复 Vue <code>#app</code> 挂载作用域外 <code>&lt;body&gt;</code> 未同步 <code>.dark-theme</code> 的缺陷；新增 <code>watch(isDark)</code> 实时同步 <code>&lt;html&gt;</code>/<code>&lt;body&gt;</code> 与 <code>#app</code> 星空微光呼吸背景，全量适配专注训练舱、三星能量槽、KooBits 卡片、金色心愿奖券及所有半透明卡片的夜间深邃配色与切换飘字提示。</li>
               </ul>
             </div>
 
@@ -1644,7 +1656,7 @@
     const STORAGE_KEY = "HABIT_POINTS_DATA_v1_2_2";
 
     const DEFAULT_DATA = {
-      version: "2.4.1",
+      version: "2.4.2",
       parentPin: "8888",
       activeChildId: "brayden",
       children: [
@@ -2561,9 +2573,11 @@
 
         const selectCompetition = (name, pts) => {
           showCompetitionModal.value = false;
-          addEarn(name, pts, `音乐比赛 / 考级优异成就大奖`, '🏆');
-          triggerConfetti(true);
-          SoundAndVoiceEngine.playStarFanfare();
+          requireParentAuth(() => {
+            addEarn(name, pts, `各类比赛获奖 / 技能考级优异成就大奖`, '🏆');
+            triggerConfetti(true);
+            SoundAndVoiceEngine.playStarFanfare();
+          });
         };
 
         const submitCustomEarn = () => {
@@ -2572,9 +2586,11 @@
             return;
           }
           showCustomEarnModal.value = false;
-          addEarn(customEarn.value.reason, customEarn.value.points, '家长特别表扬加分', '✨');
-          customEarn.value.reason = '';
-          customEarn.value.points = 5;
+          requireParentAuth(() => {
+            addEarn(customEarn.value.reason, customEarn.value.points, '家长特别表扬加分', '✨');
+            customEarn.value.reason = '';
+            customEarn.value.points = 5;
+          });
         };
 
         const approveSingleTx = (tx) => {

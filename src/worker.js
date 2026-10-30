@@ -301,6 +301,20 @@ function mergeAndRecomputeState(existing, incoming) {
     }
   }
 
+  // 权威守护：彻底防御安安历史误触比赛流水复活
+  for (const tx of mergedTxMap.values()) {
+    if (tx && tx.childId === "kayden") {
+      if (
+        tx.reason?.includes("音乐比赛") ||
+        tx.reason?.includes("钢琴考级") ||
+        tx.taskKey?.includes("音乐比赛") ||
+        tx.taskKey?.includes("钢琴考级")
+      ) {
+        tx.auditStatus = "rejected";
+      }
+    }
+  }
+
   const allTx = Array.from(mergedTxMap.values());
   const initTxs = allTx.filter(t => t.taskKey === "init" || String(t.id).startsWith("init_"));
   if (!initTxs.some(t => t.childId === "brayden")) {
